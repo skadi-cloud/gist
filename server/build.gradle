@@ -51,7 +51,7 @@ dependencies {
     implementation "org.jetbrains.exposed:exposed-dao:$exposed_version"
     implementation "org.jetbrains.exposed:exposed-jdbc:$exposed_version"
     implementation "org.jetbrains.exposed:exposed-java-time:$exposed_version"
-    implementation "org.postgresql:postgresql:42.2.22"
+    implementation "org.postgresql:postgresql:42.2.23"
     implementation group: 'org.kohsuke', name: 'github-api', version: '1.131'
 
     testImplementation "io.ktor:ktor-server-tests:$ktor_version"
