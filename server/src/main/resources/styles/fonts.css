@@ -1,0 +1,79 @@
+@font-face {
+    font-family: 'Montserrat';
+    font-style: italic;
+    font-weight: 400;
+    font-display: swap;
+    src: url(../webfonts/Montserrat-Italic.ttf) format('truetype');
+    src: url(../webfonts/Montserrat-Italic.woff2) format('woff2');
+}
+@font-face {
+    font-family: 'Montserrat';
+    font-weight: 400;
+    font-display: swap;
+    src: url(../webfonts/Montserrat-Regular.ttf) format('truetype');
+    src: url(../webfonts/Montserrat-Regular.woff2) format('woff2');
+}
+
+@font-face {
+    font-family: 'Montserrat';
+    font-weight: 600;
+    font-display: swap;
+    src: url(../webfonts/Montserrat-SemiBold.ttf) format('truetype');
+    src: url(../webfonts/Montserrat-SemiBold.woff2) format('woff2');
+}
+
+@font-face {
+    font-family: 'Montserrat';
+    font-weight: 700;
+    font-display: swap;
+    src: url(../webfonts/Montserrat-Bold.ttf) format('truetype');
+    src: url(../webfonts/Montserrat-Bold.woff2) format('woff2');
+}
+
+@font-face {
+    font-family: 'Raleway';
+    font-style: italic;
+    font-weight: 100;
+    font-display: swap;
+    src: url(../webfonts/Raleway-ThinItalic.ttf) format('truetype');
+    src: url(../webfonts/Raleway-ThinItalic.woff2) format('woff2');
+}
+@font-face {
+    font-family: 'Raleway';
+    font-weight: 100;
+    font-display: swap;
+    src: url(../webfonts/Raleway-Thin.ttf) format('truetype');
+    src: url(../webfonts/Raleway-Thin.woff2) format('woff2');
+}
+
+@font-face {
+    font-family: 'Raleway';
+    font-weight: 400;
+    font-display: swap;
+    src: url(../webfonts/Raleway-Regular.ttf) format('truetype');
+    src: url(../webfonts/Raleway-Regular.woff2) format('woff2');
+}
+@font-face {
+    font-family: 'Raleway';
+    font-style: italic;
+    font-weight: 400;
+    font-display: swap;
+    src: url(../webfonts/Raleway-Italic.ttf) format('truetype');
+    src: url(../webfonts/Raleway-Italic.woff2) format('woff2');
+}
+
+@font-face {
+    font-family: 'Nanum Gothic Coding';
+    font-weight: 600;
+    font-display: swap;
+    src: url(../webfonts/NanumGothicCoding-Bold.ttf) format('truetype');
+    src: url(../webfonts/NanumGothicCoding-Bold.woff2) format('woff2');
+}
+
+@font-face {
+    font-family: 'Nanum Gothic Coding';
+    font-weight: 400;
+    font-display: swap;
+    src: url(../webfonts/NanumGothicCoding-Regular.ttf) format('truetype');
+    src: url(../webfonts/NanumGothicCoding-Regular.woff2) format('woff2');
+}

@@ -1,0 +1,46 @@
+plugins {
+    id 'org.jetbrains.intellij'
+    id 'org.jetbrains.kotlin.jvm'
+}
+
+version '0.1'
+
+repositories {
+    mavenCentral()
+    maven {
+        url = 'https://projects.itemis.de/nexus/content/repositories/mbeddr'
+    }
+    maven { url "https://maven.pkg.jetbrains.space/public/p/kotlinx-html/maven" }
+}
+
+dependencies {
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.3.70"
+    implementation "org.jetbrains.kotlin:kotlin-reflect:1.3.70"
+
+    implementation "io.ktor:ktor-client-core:1.6.3"
+    implementation "io.ktor:ktor-client-java:1.6.3"
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-swing:1.5.2"
+    implementation "org.jetbrains.kotlinx:kotlinx-html-jvm:0.7.3"
+    implementation "org.jetbrains.kotlinx:kotlinx-html:0.7.3"
+
+    implementation project(":shared")
+
+    compileOnly "com.jetbrains:mps-workbench:$mpsVersion"
+    compileOnly "com.jetbrains:mps-core:$mpsVersion"
+    compileOnly "com.jetbrains:mps-platform:$mpsVersion"
+    compileOnly "com.jetbrains:mps-openapi:$mpsVersion"
+    compileOnly "com.jetbrains:mps-editor:$mpsVersion"
+    compileOnly "com.jetbrains:mps-editor-api:$mpsVersion"
+}
+
+// See https://github.com/JetBrains/gradle-intellij-plugin/
+intellij {
+    version = "$intellijVersion"
+}
+patchPluginXml {
+    changeNotes = """
+      Add change notes here.<br>
+      <em>most HTML tags may be used</em>"""
+}
+
+buildSearchableOptions.enabled(false)

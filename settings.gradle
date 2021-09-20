@@ -1,0 +1,6 @@
+rootProject.name = "skadi-cloud-gist"
+
+include ':server'
+include ':ide-plugin'
+include ':shared'
+
