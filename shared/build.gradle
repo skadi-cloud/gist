@@ -2,12 +2,24 @@ plugins {
     id 'org.jetbrains.kotlin.jvm'
 }
 
-version 'unspecified'
-
 repositories {
     mavenCentral()
 }
 
 dependencies {
-    implementation "org.jetbrains.kotlin:kotlin-stdlib"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:1.4.0"
+}
+
+java {
+    toolchain.languageVersion.set(JavaLanguageVersion.of(11))
+}
+
+compileKotlin {
+    kotlinOptions.jvmTarget = targetJvm
+    kotlinOptions.apiVersion = "1.4"
+}
+
+compileTestKotlin {
+    kotlinOptions.jvmTarget = targetJvm
+    kotlinOptions.apiVersion = "1.4"
 }
