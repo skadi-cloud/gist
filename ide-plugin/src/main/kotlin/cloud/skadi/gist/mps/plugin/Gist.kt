@@ -10,8 +10,10 @@ import io.ktor.client.features.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
+import jetbrains.mps.lang.smodel.generator.smodelAdapter.SModelOperations
 import jetbrains.mps.lang.smodel.generator.smodelAdapter.SNodeOperations
 import jetbrains.mps.lang.smodel.generator.smodelAdapter.SPropertyOperations
+import jetbrains.mps.smodel.RegularModelDescriptor
 import jetbrains.mps.smodel.SNodePointer
 import jetbrains.mps.smodel.StaticReference
 import jetbrains.mps.smodel.adapter.structure.concept.SConceptAdapterById
@@ -24,9 +26,11 @@ import jetbrains.mps.smodel.adapter.structure.types.SPrimitiveTypes
 import org.jetbrains.builtInWebServer.BuiltInServerOptions
 import org.jetbrains.mps.openapi.language.SLanguage
 import org.jetbrains.mps.openapi.language.SProperty
+import org.jetbrains.mps.openapi.model.SModel
 import org.jetbrains.mps.openapi.model.SModelReference
 import org.jetbrains.mps.openapi.model.SNode
 import org.jetbrains.mps.openapi.module.SRepository
+import org.jetbrains.mps.openapi.persistence.PersistenceFacade
 import java.net.InetAddress
 import java.util.*
 
@@ -49,8 +53,8 @@ fun getLoginUrl(settings: SkadiGistSettings): String {
     return URLBuilder(settings.backendAddress).also { builder ->
         builder.pathComponents("ide", "login")
         builder.parameters.also {
-            it.append(PARAMETER_DEVICE_NAME,InetAddress.getLocalHost().hostName)
-            it.append(PARAMETER_CALLBACK,url.toString())
+            it.append(PARAMETER_DEVICE_NAME, InetAddress.getLocalHost().hostName)
+            it.append(PARAMETER_CALLBACK, url.toString())
             it.append(PARAMETER_CSRF_TOKEN, settings.newCsrfToken())
         }
     }.buildString()
@@ -69,7 +73,7 @@ suspend fun upload(
         visibility = visibility,
         roots = nodes.mapIndexed { index, node ->
             var isRoot = false
-            var nodeName : String? = null
+            var nodeName: String? = null
             repository.modelAccess.runReadAction {
                 isRoot = node.parent == null
                 nodeName = node.presentation
@@ -109,10 +113,77 @@ fun serializeRootNode(node: SNode): AST {
     }
 
     return AST(
-        imports.map { Import(it.modelName, it.modelId.toString()) },
+        imports.map { Import(it.modelName, it.modelId.toString(), it.toString()) },
         usedLanguages.map { UsedLanguage(it.qualifiedName, (it as SLanguageAdapterById).serialize()) },
         serializedNode!!
     )
+}
+
+/***
+ * Imports the AST into the model and adds the imported models and used languages.
+ * This method needs to be called inside a write action. The root node is attached
+ * to the model after is being parsed to avoid exessive notifications while creating
+ * the nodes.
+ */
+fun AST.importInto(model: SModel) {
+    val node = this.root.toSNode(model.reference)
+    model.addRootNode(node)
+    if (model is RegularModelDescriptor) {
+        this.imports.forEach { import ->
+            model.addModelImport(PersistenceFacade.getInstance().createModelReference(import.reference))
+        }
+        this.usedLanguage.forEach { usedLanguage ->
+            model.addLanguage(SLanguageAdapterById.deserialize(usedLanguage.id))
+        }
+    }
+}
+
+/***
+ * Converts the AST node to a SNode but doesn't attach it to any model. Model reference is
+ * used to keep local references.
+ * Needs to be called in a read action.
+ */
+fun Node.toSNode(targetModel: SModelReference): SNode {
+    val children = this.children.map { child -> child.containmentLinkId to child.node.toSNode(targetModel) }
+    /* We don't set the model here because it might in the repository and will send change notifications
+    *
+    *  Using the node id from the original model could cause a conflict because there is guarantee that
+    *  it is unique globally. NodeId doesn't have to good entropy since it's only once initialised with a random value
+    *  and the only incremented. Ideally we check if the node id is taken by trying to get a node with its
+    *  id. If there is a node with that id already we woudl generate a new one. We would need stora a mapping
+    *  to update the references to that node by replacing the node pointer of the SReference.
+    *  Since the scope of this method is a "root" in the model we get from the server we would need to keep that
+    *  mapping for all "roots" and then have a second phase that sets the references correctly with updated node ids.
+    * */
+    val sNode = SModelOperations.createNewNode(
+        null,
+        PersistenceFacade.getInstance().createNodeId(this.id),
+        SConceptAdapterById.deserialize(this.concept)
+    )
+
+    children.forEach { (id, child) ->
+        sNode.addChild(SContainmentLinkAdapterById.deserialize(id), child)
+    }
+
+    this.properties.forEach {
+        val sPropertyAdapterById = SPropertyAdapterById.deserialize(it.id)
+        val value = it.value ?: return@forEach
+        when (it.type) {
+            PropertyType.Bool -> SPropertyOperations.set(sNode, sPropertyAdapterById, value.toBoolean())
+            PropertyType.Int -> SPropertyOperations.set(sNode, sPropertyAdapterById, value.toInt())
+            else -> SPropertyOperations.set(sNode, sPropertyAdapterById, value)
+        }
+    }
+
+    this.references.forEach {
+        val pointer = if (it.isLocal)
+            SNodePointer.deserialize(it.targetNodeReference).run { SNodePointer(targetModel, nodeId) }
+        else
+            SNodePointer.deserialize(it.targetNodeReference)
+
+        sNode.setReference(SReferenceLinkAdapterById.deserialize(it.referenceId), pointer)
+    }
+    return sNode
 }
 
 fun SProperty.convertType() =
@@ -153,7 +224,8 @@ fun SNode.serialize(): Node {
             .map {
                 Reference(
                     (it.link as SReferenceLinkAdapterById).serialize(),
-                    SNodePointer.serialize(it.targetNodeReference)
+                    SNodePointer.serialize(it.targetNodeReference),
+                    it.targetNodeReference.modelReference == this.model?.reference
                 )
             }
     )
