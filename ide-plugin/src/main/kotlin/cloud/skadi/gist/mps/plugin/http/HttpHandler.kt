@@ -2,21 +2,30 @@ package cloud.skadi.gist.mps.plugin.http
 
 import cloud.skadi.gist.mps.plugin.config.SkadiGistSettings
 import cloud.skadi.gist.mps.plugin.getLoginUrl
+import cloud.skadi.gist.shared.ImportGistMessage
 import cloud.skadi.gist.shared.PARAMETER_CSRF_TOKEN
 import cloud.skadi.gist.shared.PARAMETER_DEVICE_TOKEN
 import cloud.skadi.gist.shared.PARAMETER_USER_NAME
+import com.fasterxml.jackson.databind.json.JsonMapper
+import com.fasterxml.jackson.module.kotlin.KotlinModule
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.intellij.ide.BrowserUtil
 import com.intellij.notification.Notification
 import com.intellij.notification.NotificationAction
 import com.intellij.notification.NotificationGroupManager
 import com.intellij.notification.NotificationType
 import com.intellij.openapi.actionSystem.AnActionEvent
-import com.intellij.util.io.origin
-import com.intellij.util.io.referrer
+import com.intellij.openapi.project.ex.ProjectManagerEx
+import io.ktor.client.engine.java.*
+import io.ktor.client.request.*
+import io.ktor.client.statement.HttpResponse
+import io.ktor.utils.io.jvm.javaio.*
 import io.netty.channel.ChannelFutureListener
 import io.netty.channel.ChannelHandlerContext
 import io.netty.handler.codec.http.*
+import io.netty.handler.codec.http.DefaultHttpResponse
 import io.netty.handler.stream.ChunkedStream
+import kotlinx.coroutines.runBlocking
 import kotlinx.html.*
 import kotlinx.html.stream.createHTML
 import org.apache.http.entity.ContentType
@@ -28,8 +37,17 @@ import java.net.URL
 import java.util.*
 
 class HttpHandler : HttpRequestHandler() {
+    private val client = io.ktor.client.HttpClient(Java) {
+        followRedirects = true
+
+    }
+    private val mapper = JsonMapper.builder()
+        .addModule(KotlinModule())
+        .build()
+
     override fun isSupported(request: FullHttpRequest): Boolean {
-        return request.method() == HttpMethod.GET && (request.uri().startsWith("/skadi-gist/"))
+        return (request.method() == HttpMethod.GET || request.method() == HttpMethod.POST) && (request.uri()
+            .startsWith("/skadi-gist/"))
     }
 
     override fun process(
@@ -38,10 +56,47 @@ class HttpHandler : HttpRequestHandler() {
         context: ChannelHandlerContext
     ): Boolean {
         return when {
-            urlDecoder.path().endsWith("/login-response") ->
+            request.method() == HttpMethod.GET && urlDecoder.path().endsWith("/login-response") ->
                 handleLogin(urlDecoder, request, context)
+            request.method() == HttpMethod.POST && urlDecoder.path().endsWith("/import-gist") ->
+                importGist(urlDecoder.parameters()["gist"]!!.first(), request, context)
             else -> false
         }
+    }
+
+    private fun importGist(gist: String, request: FullHttpRequest, context: ChannelHandlerContext): Boolean {
+        val settings = SkadiGistSettings.getInstance()
+
+        val toImport =
+            runBlocking {
+                val response = client.get<HttpResponse>(URL("${settings.backendAddress}/gist/$gist/nodes")) {
+                    accept(io.ktor.http.ContentType.Application.Json)
+                }
+                mapper.readValue<ImportGistMessage>(response.content.toInputStream())
+            }
+
+        ProjectManagerEx.getInstanceExIfCreated()?.openProjects?.filter { !it.isDisposed }?.forEach { project ->
+            val notificationGroup =
+                NotificationGroupManager.getInstance().getNotificationGroup("Skadi Gist")
+            notificationGroup.createNotification("Import Gist", "Import Gist ${toImport.name}?")
+                .addAction(DoImportAction(toImport)).notify(project)
+        }
+
+        val response = DefaultHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK)
+        response.headers().set(HttpHeaderNames.CONTENT_TYPE, ContentType.TEXT_HTML)
+        response.addCommonHeaders()
+        response.headers().set(HttpHeaderNames.CACHE_CONTROL, "private, must-revalidate") //NON-NLS
+        response.headers().set(HttpHeaderNames.LAST_MODIFIED, Date(Calendar.getInstance().timeInMillis))
+
+        val channel = context.channel()
+        channel.write(response)
+        val keepAlive = response.addKeepAliveIfNeeded(request)
+        val future = channel.writeAndFlush(LastHttpContent.EMPTY_LAST_CONTENT)
+        if (!keepAlive) {
+            future.addListener(ChannelFutureListener.CLOSE)
+        }
+
+        return true
     }
 
     private fun handleLogin(
@@ -51,8 +106,13 @@ class HttpHandler : HttpRequestHandler() {
     ): Boolean {
         val parameters = urlDecoder.parameters()
         val token =
-            parameters[PARAMETER_DEVICE_TOKEN]?.firstOrNull() ?: return respondWithError("missing token", request, context)
-        val user = parameters[PARAMETER_USER_NAME]?.firstOrNull() ?: return respondWithError("missing user", request, context)
+            parameters[PARAMETER_DEVICE_TOKEN]?.firstOrNull() ?: return respondWithError(
+                "missing token",
+                request,
+                context
+            )
+        val user =
+            parameters[PARAMETER_USER_NAME]?.firstOrNull() ?: return respondWithError("missing user", request, context)
         val csrfToken = parameters[PARAMETER_CSRF_TOKEN]?.firstOrNull() ?: return respondWithError(
             "missing csrf token",
             request,
@@ -61,7 +121,7 @@ class HttpHandler : HttpRequestHandler() {
 
         val settings = SkadiGistSettings.getInstance()
 
-        if(!settings.checkCsrfToken(csrfToken))
+        if (!settings.checkCsrfToken(csrfToken))
             return respondWithError("invalid csrf token", request, context)
 
 
@@ -85,7 +145,7 @@ class HttpHandler : HttpRequestHandler() {
         settings.loggedInUser = user
         settings.deviceToken = token
 
-        respond(request, context) {
+        respond(request, context, success = true) {
             head { title = "Skadi Cloud Gist" }
             body {
                 h1 { +"Login Successful" }
@@ -113,8 +173,16 @@ class HttpHandler : HttpRequestHandler() {
         return true
     }
 
-    private fun respond(request: FullHttpRequest, context: ChannelHandlerContext, block : HTML.() -> Unit) {
-        val response = DefaultHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.BAD_REQUEST)
+    private fun respond(
+        request: FullHttpRequest,
+        context: ChannelHandlerContext,
+        success: Boolean = false,
+        block: HTML.() -> Unit
+    ) {
+        val response = DefaultHttpResponse(
+            HttpVersion.HTTP_1_1,
+            if (success) HttpResponseStatus.OK else HttpResponseStatus.BAD_REQUEST
+        )
         response.headers().set(HttpHeaderNames.CONTENT_TYPE, ContentType.TEXT_HTML)
         response.addCommonHeaders()
         response.headers().set(HttpHeaderNames.CACHE_CONTROL, "private, must-revalidate") //NON-NLS

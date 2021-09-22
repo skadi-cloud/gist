@@ -135,7 +135,7 @@ fun Application.configureGistRoutes(
                 val jsonNodes = newSuspendedTransaction {
                     gist.roots.notForUpdate().map { jacksonObjectMapper().readValue<AST>(it.node) }
                 }
-                call.respond(ImportGistMessage(jsonNodes))
+                call.respond(ImportGistMessage(gist.name, jsonNodes))
             }
         }
     }

@@ -10,10 +10,11 @@ import io.ktor.client.features.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
-import jetbrains.mps.lang.smodel.generator.smodelAdapter.SModelOperations
+import jetbrains.mps.extapi.model.EditableSModelBase
+import jetbrains.mps.kernel.model.MissingDependenciesFixer
 import jetbrains.mps.lang.smodel.generator.smodelAdapter.SNodeOperations
 import jetbrains.mps.lang.smodel.generator.smodelAdapter.SPropertyOperations
-import jetbrains.mps.smodel.RegularModelDescriptor
+import jetbrains.mps.smodel.SModelUtil_new
 import jetbrains.mps.smodel.SNodePointer
 import jetbrains.mps.smodel.StaticReference
 import jetbrains.mps.smodel.adapter.structure.concept.SConceptAdapterById
@@ -128,13 +129,14 @@ fun serializeRootNode(node: SNode): AST {
 fun AST.importInto(model: SModel) {
     val node = this.root.toSNode(model.reference)
     model.addRootNode(node)
-    if (model is RegularModelDescriptor) {
+    if (model is EditableSModelBase) {
         this.imports.forEach { import ->
             model.addModelImport(PersistenceFacade.getInstance().createModelReference(import.reference))
         }
         this.usedLanguage.forEach { usedLanguage ->
             model.addLanguage(SLanguageAdapterById.deserialize(usedLanguage.id))
         }
+        MissingDependenciesFixer(model).fixModuleDependencies()
     }
 }
 
@@ -155,11 +157,20 @@ fun Node.toSNode(targetModel: SModelReference): SNode {
     *  Since the scope of this method is a "root" in the model we get from the server we would need to keep that
     *  mapping for all "roots" and then have a second phase that sets the references correctly with updated node ids.
     * */
-    val sNode = SModelOperations.createNewNode(
+
+    //method is deprecated but replacement calls into in behaviour to init the node which
+    //is not what we want. Executing the constucutor might already create a sub structure
+    //that we don't need. e.g. for ClassConcept it would already create a visiblity.
+    //After deserialising from JSON we would then add another visiblilty hence violating the
+    // model constrains.
+    // FIXME: find a way to instantiate a node without initilizing it that isn't deprecated.
+    val sNode = SModelUtil_new.instantiateConceptDeclaration(
+        SConceptAdapterById.deserialize(this.concept),
         null,
         PersistenceFacade.getInstance().createNodeId(this.id),
-        SConceptAdapterById.deserialize(this.concept)
+        false
     )
+
 
     children.forEach { (id, child) ->
         sNode.addChild(SContainmentLinkAdapterById.deserialize(id), child)
@@ -181,7 +192,16 @@ fun Node.toSNode(targetModel: SModelReference): SNode {
         else
             SNodePointer.deserialize(it.targetNodeReference)
 
-        sNode.setReference(SReferenceLinkAdapterById.deserialize(it.referenceId), pointer)
+        val referenceId = SReferenceLinkAdapterById.deserialize(it.referenceId)
+
+        /**
+         * FIXME: use new API in 2021.1+: sNode.setReference(SReferenceLinkAdapterById.deserialize(it.referenceId), pointer)
+         */
+
+        sNode.setReference(
+            referenceId,
+            StaticReference(referenceId, sNode, pointer.modelReference, pointer.nodeId, it.resolveInfo)
+        )
     }
     return sNode
 }
@@ -225,7 +245,8 @@ fun SNode.serialize(): Node {
                 Reference(
                     (it.link as SReferenceLinkAdapterById).serialize(),
                     SNodePointer.serialize(it.targetNodeReference),
-                    it.targetNodeReference.modelReference == this.model?.reference
+                    it.targetNodeReference.modelReference == this.model?.reference,
+                    resolveInfo = it.resolveInfo
                 )
             }
     )

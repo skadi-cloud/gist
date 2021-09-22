@@ -13,4 +13,4 @@ data class GistCreationRequest(
     val roots: List<GistNode>
 )
 
-data class ImportGistMessage(val roots: List<AST>)
+data class ImportGistMessage(val name: String, val roots: List<AST>)
