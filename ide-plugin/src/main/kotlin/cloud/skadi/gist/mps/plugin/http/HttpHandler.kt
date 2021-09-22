@@ -2,6 +2,8 @@ package cloud.skadi.gist.mps.plugin.http
 
 import cloud.skadi.gist.mps.plugin.config.SkadiGistSettings
 import cloud.skadi.gist.mps.plugin.getLoginUrl
+import cloud.skadi.gist.mps.plugin.importInto
+import cloud.skadi.gist.mps.plugin.toSNode
 import cloud.skadi.gist.shared.ImportGistMessage
 import cloud.skadi.gist.shared.PARAMETER_CSRF_TOKEN
 import cloud.skadi.gist.shared.PARAMETER_DEVICE_TOKEN
@@ -25,6 +27,9 @@ import io.netty.channel.ChannelHandlerContext
 import io.netty.handler.codec.http.*
 import io.netty.handler.codec.http.DefaultHttpResponse
 import io.netty.handler.stream.ChunkedStream
+import jetbrains.mps.ide.datatransfer.CopyPasteUtil
+import jetbrains.mps.smodel.GlobalModelAccess
+import jetbrains.mps.smodel.ModelAccess
 import kotlinx.coroutines.runBlocking
 import kotlinx.html.*
 import kotlinx.html.stream.createHTML
@@ -75,12 +80,32 @@ class HttpHandler : HttpRequestHandler() {
                 mapper.readValue<ImportGistMessage>(response.content.toInputStream())
             }
 
-        ProjectManagerEx.getInstanceExIfCreated()?.openProjects?.filter { !it.isDisposed }?.forEach { project ->
-            val notificationGroup =
-                NotificationGroupManager.getInstance().getNotificationGroup("Skadi Gist")
-            notificationGroup.createNotification("Import Gist", "Import Gist ${toImport.name}?")
-                .addAction(DoImportAction(toImport)).notify(project)
+        if (toImport.roots.size == 1 && !toImport.roots.first().isRootNode) {
+
+            ModelAccess.instance().runReadAction {
+                CopyPasteUtil.copyNodeToClipboard(toImport.roots.first().root.toSNode(null))
+            }
+
+            ProjectManagerEx.getInstanceExIfCreated()?.openProjects?.filter { !it.isDisposed }?.forEach { project ->
+                val notificationGroup =
+                    NotificationGroupManager.getInstance().getNotificationGroup("Skadi Gist")
+                notificationGroup.createNotification(
+                    "Gist copied",
+                    "Gist '${toImport.name}' was copied to the clipboard."
+                ).notify(project)
+            }
+        } else {
+            ProjectManagerEx.getInstanceExIfCreated()?.openProjects?.filter { !it.isDisposed }?.forEach { project ->
+                val notificationGroup =
+                    NotificationGroupManager.getInstance().getNotificationGroup("Skadi Gist")
+                notificationGroup.createNotification(
+                    "Import gist?",
+                    "Gist '${toImport.name}' contains root node. Do you want to import the gist?"
+                )
+                    .addAction(DoImportAction(toImport)).notify(project)
+            }
         }
+
 
         val response = DefaultHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK)
         response.headers().set(HttpHeaderNames.CONTENT_TYPE, ContentType.TEXT_HTML)

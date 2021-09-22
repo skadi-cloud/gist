@@ -101,6 +101,7 @@ suspend fun upload(
 
 fun serializeRootNode(node: SNode): AST {
     var serializedNode: Node? = null
+    var isRoot = false
 
     var usedLanguages: List<SLanguage> = emptyList()
     var imports: List<SModelReference> = emptyList()
@@ -111,12 +112,14 @@ fun serializeRootNode(node: SNode): AST {
         usedLanguages = descendants.map { it.concept.language }.distinct()
         imports = descendants.flatMap { it.references.mapNotNull { reference -> reference.targetSModelReference } }
             .distinct()
+        isRoot = node.containingRoot == node
     }
 
     return AST(
         imports.map { Import(it.modelName, it.modelId.toString(), it.toString()) },
         usedLanguages.map { UsedLanguage(it.qualifiedName, (it as SLanguageAdapterById).serialize()) },
-        serializedNode!!
+        serializedNode!!,
+        isRoot
     )
 }
 
@@ -145,7 +148,7 @@ fun AST.importInto(model: SModel) {
  * used to keep local references.
  * Needs to be called in a read action.
  */
-fun Node.toSNode(targetModel: SModelReference): SNode {
+fun Node.toSNode(targetModel: SModelReference?): SNode {
     val children = this.children.map { child -> child.containmentLinkId to child.node.toSNode(targetModel) }
     /* We don't set the model here because it might in the repository and will send change notifications
     *
@@ -187,7 +190,7 @@ fun Node.toSNode(targetModel: SModelReference): SNode {
     }
 
     this.references.forEach {
-        val pointer = if (it.isLocal)
+        val pointer = if (it.isLocal && targetModel != null)
             SNodePointer.deserialize(it.targetNodeReference).run { SNodePointer(targetModel, nodeId) }
         else
             SNodePointer.deserialize(it.targetNodeReference)

@@ -9,7 +9,13 @@ enum class PropertyType {
 
 data class Property(val value: String?, val id: String, val type: PropertyType?)
 data class Child(val containmentLinkId: String, val node: Node)
-data class Reference(val referenceId: String, val targetNodeReference: String, val isLocal: Boolean = false, val resolveInfo: String? = null)
+data class Reference(
+    val referenceId: String,
+    val targetNodeReference: String,
+    val isLocal: Boolean = false,
+    val resolveInfo: String? = null
+)
+
 data class Node(
     val id: String,
     val concept: String,
@@ -18,4 +24,9 @@ data class Node(
     val references: List<Reference>
 )
 
-data class AST(val imports: List<Import>, val usedLanguage: List<UsedLanguage>, val root: Node)
+data class AST(
+    val imports: List<Import>,
+    val usedLanguage: List<UsedLanguage>,
+    val root: Node,
+    val isRootNode: Boolean = false
+)
