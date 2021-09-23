@@ -7,7 +7,7 @@ plugins {
 apply plugin: 'application'
 
 def ktor_version= '1.6.3'
-def logback_version="1.2.3"
+def logback_version="1.2.6"
 def prometeus_version="1.6.3"
 def exposed_version = '0.32.1'
 
