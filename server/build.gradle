@@ -8,7 +8,7 @@ apply plugin: 'application'
 
 def ktor_version= '1.6.3'
 def logback_version="1.2.6"
-def prometeus_version="1.6.3"
+def prometeus_version="1.7.4"
 def exposed_version = '0.35.1'
 
 mainClassName = "cloud.skadi.ApplicationKt"
