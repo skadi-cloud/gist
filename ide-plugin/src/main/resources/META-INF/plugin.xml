@@ -11,6 +11,8 @@
     <!-- please see https://plugins.jetbrains.com/docs/intellij/plugin-compatibility.html
          on how to target different products -->
     <depends>com.intellij.modules.platform</depends>
+    <depends>com.intellij.modules.mps</depends>
+    <depends>jetbrains.mps.core</depends>
 
     <extensions defaultExtensionNs="com.intellij">
         <!-- Add your extensions here -->
@@ -31,9 +33,12 @@
         <action id="cloud.skadi.gist.mps.plugin.CreateGistFromNodeAction"
                 class="cloud.skadi.gist.mps.plugin.CreateGistFromNodeAction" text="Create Gist"
                 description="Creates a Gist from the current Node">
-            <add-to-group group-id="EditMenu" anchor="first"/>
-            <add-to-group group-id="FileMenu" anchor="first"/>
-            <add-to-group group-id="OtherMenu" anchor="first"/>
+            <add-to-group group-id="EditorPopup_ActionGroupcopy" anchor="last"/>
+            <add-to-group group-id="RunContextGroup" anchor="last"/>
+            <!-- ideally we would like to add to jetbrains.mps.ide.actions.NodeActions_ActionGroup but that action
+            is registed with the MPS plugin subsystem. These action only exist at run time and can not
+            be referenced from plugin.xml. Plugin.xml files are evaluated before the MPS plug is initilized
+            and the actions aren't there so adding them will fail. -->
             <!--<add-to-group group-id="jetbrains.mps.ide.actions.FlyingActions_ActionGroup" />-->
         </action>
     </actions>

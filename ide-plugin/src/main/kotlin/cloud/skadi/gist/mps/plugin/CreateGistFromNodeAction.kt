@@ -8,8 +8,11 @@ import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.wm.ToolWindowManager
 import jetbrains.mps.ide.actions.MPSCommonDataKeys
 
-class CreateGistFromNodeAction : AnAction() {
+class CreateGistFromNodeAction : AnAction("Create Gist" ) {
     val logger = Logger.getInstance(CreateGistFromNodeAction::class.java)
+    init {
+        isEnabledInModalContext = true
+    }
     override fun actionPerformed(e: AnActionEvent) {
         val window = ToolWindowManager.getInstance(e.project!!).getToolWindow(SkadiToolWindowController.ID) ?: return
         window.activate {
