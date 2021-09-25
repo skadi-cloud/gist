@@ -9,4 +9,4 @@ val runWebpack by tasks.creating(com.github.gradle.node.npm.task.NpxTask::class)
 
 tasks.create("build") {
     dependsOn(runWebpack)
-} 
+}
