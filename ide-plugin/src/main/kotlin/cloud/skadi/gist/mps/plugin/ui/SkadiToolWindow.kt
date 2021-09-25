@@ -1,32 +1,36 @@
 package cloud.skadi.gist.mps.plugin.ui
 
+import cloud.skadi.gist.mps.plugin.calculateReader
 import cloud.skadi.gist.mps.plugin.config.SkadiGistSettings
 import cloud.skadi.gist.mps.plugin.upload
 import cloud.skadi.gist.shared.GistVisibility
 import com.intellij.icons.AllIcons
 import com.intellij.ide.BrowserUtil
+import com.intellij.ide.actions.ShowSettingsUtilImpl
 import com.intellij.ide.plugins.newui.HorizontalLayout
 import com.intellij.notification.NotificationGroupManager
 import com.intellij.notification.NotificationType
-import com.intellij.openapi.actionSystem.DataContext
 import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.progress.Task
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Key
 import com.intellij.openapi.wm.ToolWindow
 import com.intellij.ui.IdeBorderFactory
+import com.intellij.ui.JBColor
 import com.intellij.ui.SideBorder
 import com.intellij.ui.components.JBRadioButton
 import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.components.JBTextArea
+import com.intellij.ui.components.labels.LinkLabel
 import com.intellij.ui.scale.JBUIScale
 import com.intellij.util.ui.JBUI
 import com.intellij.util.ui.UIUtil
-import jetbrains.mps.ide.actions.MPSCommonDataKeys
 import kotlinx.coroutines.runBlocking
 import net.miginfocom.layout.CC
 import net.miginfocom.layout.LC
 import net.miginfocom.swing.MigLayout
+import org.jetbrains.mps.openapi.model.SNode
+import org.jetbrains.mps.openapi.module.SRepository
 import java.awt.BorderLayout
 import java.awt.Component
 import java.awt.Container
@@ -53,9 +57,11 @@ class SkadiToolWindowController(private val window: ToolWindow) {
         return wrapper
     }
 
-    fun createGist(project: Project, dataContext: DataContext) {
+    fun createGist(project: Project, nodes: List<SNode>, repo: SRepository) {
 
-        val createAction = CreateGistAction(project, dataContext) { visiblility }
+        val createAction = CreateGistAction(project, nodes, repo) { visiblility }
+
+        val nodeNames = repo.modelAccess.calculateReader { nodes.map { it.presentation } } ?: emptyList()
 
         val cancelAction = object : AbstractAction("Cancel") {
             override fun actionPerformed(e: ActionEvent?) {
@@ -112,7 +118,7 @@ class SkadiToolWindowController(private val window: ToolWindow) {
             isSelected = visiblility == SkadiGistSettings.Visiblility.Public
             addActionListener {
                 visiblility = SkadiGistSettings.Visiblility.Public
-                if(settings.rememberVisiblility) {
+                if (settings.rememberVisiblility) {
                     settings.visiblility = SkadiGistSettings.Visiblility.Public
                 }
             }
@@ -122,7 +128,7 @@ class SkadiToolWindowController(private val window: ToolWindow) {
             isSelected = visiblility == SkadiGistSettings.Visiblility.Internal
             addActionListener {
                 visiblility = SkadiGistSettings.Visiblility.Internal
-                if(settings.rememberVisiblility) {
+                if (settings.rememberVisiblility) {
                     settings.visiblility = SkadiGistSettings.Visiblility.Internal
                 }
             }
@@ -132,7 +138,7 @@ class SkadiToolWindowController(private val window: ToolWindow) {
             isSelected = visiblility == SkadiGistSettings.Visiblility.Private
             addActionListener {
                 visiblility = SkadiGistSettings.Visiblility.Private
-                if(settings.rememberVisiblility) {
+                if (settings.rememberVisiblility) {
                     settings.visiblility = SkadiGistSettings.Visiblility.Private
                 }
             }
@@ -160,11 +166,26 @@ class SkadiToolWindowController(private val window: ToolWindow) {
 
         val loginWarning = createLoginWarning(settings)
 
+        val nodesPanel = JPanel().apply {
+            border = JBUI.Borders.empty(2)
+            val titleLabel = JLabel("Creating gist for:")
+            val nodeLabel = if (nodeNames.size == 1)
+                JLabel(nodeNames.first())
+            else
+                JLabel("${nodeNames.size} Nodes").apply {
+                    toolTipText = nodeNames.joinToString("<br>")
+                }
+            nodeLabel.foreground = JBColor.blue.brighter()
+            add(titleLabel)
+            add(nodeLabel)
+        }
+
         val statusPanel = JPanel().apply {
             layout = MigLayout(LC().gridGap("0", "${JBUIScale.scale(8)}").insets("0").fill().flowY().hideMode(3))
             border = JBUI.Borders.empty(8)
             add(visibilityPanel, CC().minWidth("0"))
             add(loginWarning, CC().minWidth("0"))
+            add(nodesPanel, CC().minWidth("0"))
             add(actionsPanel, CC().minWidth("0"))
         }
 
@@ -192,9 +213,11 @@ class SkadiToolWindowController(private val window: ToolWindow) {
 
     private fun createLoginWarning(settings: SkadiGistSettings): JComponent {
         val iconLabel = JLabel(AllIcons.Ide.Notification.WarningEvents)
-        val textPane = JLabel("Without loging in you are not able to delete the gist!")
+        val textPane = LinkLabel.create("Without loging in you are not able to delete the gist!") {
+            ShowSettingsUtilImpl.showSettingsDialog(null, "cloud.skadi.gist.mps.plugin.config.SkadiConfigurable", "")
+        }
 
-        val pane = JPanel(MigLayout(LC().insets("0").gridGap("0","0"))).apply {
+        val pane = JPanel(MigLayout(LC().insets("0").gridGap("0", "0"))).apply {
             add(iconLabel, CC().alignY("top").gapRight("${iconLabel.iconTextGap}"))
             add(textPane, CC().minWidth("0"))
         }
@@ -208,7 +231,8 @@ class SkadiToolWindowController(private val window: ToolWindow) {
 
     inner class CreateGistAction(
         val project: Project,
-        val dataContext: DataContext,
+        val nodes: List<SNode>,
+        val repo: SRepository,
         val getVisibility: () -> SkadiGistSettings.Visiblility,
     ) : AbstractAction("Create gist") {
         override fun actionPerformed(e: ActionEvent?) {
@@ -216,13 +240,13 @@ class SkadiToolWindowController(private val window: ToolWindow) {
             object : Task.Backgroundable(project, "Create gist") {
                 override fun run(indicator: ProgressIndicator) {
                     runBlocking {
-                        val node = dataContext.getData(MPSCommonDataKeys.NODE)!!
+
                         val url = upload(
                             titleDocument.getText(0, titleDocument.length),
                             descriptionDocument.getText(0, descriptionDocument.length),
                             getVisibility().toModel(),
-                            listOf((node)),
-                            dataContext.getData(MPSCommonDataKeys.CONTEXT_MODEL)!!.repository
+                            nodes,
+                            repo
                         )
                         val notificationGroup =
                             NotificationGroupManager.getInstance().getNotificationGroup("Skadi Gist")

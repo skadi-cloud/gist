@@ -16,13 +16,26 @@ class CreateGistFromNodeAction : AnAction("Create Gist" ) {
     override fun actionPerformed(e: AnActionEvent) {
         val window = ToolWindowManager.getInstance(e.project!!).getToolWindow(SkadiToolWindowController.ID) ?: return
         window.activate {
+            val model = e.dataContext.getData(MPSCommonDataKeys.CONTEXT_MODEL)
+            if(model == null) {
+                logger.error("no model")
+                return@activate
+            }
+            val nodes = e.dataContext.getData(MPSCommonDataKeys.NODES) ?: listOf(e.dataContext.getData(MPSCommonDataKeys.NODE))
+
+            if(nodes.filterNotNull().isEmpty()) {
+                logger.error("no nodes")
+                return@activate
+            }
+
             window.contentManager.selectedContent?.getUserData(SkadiToolWindowController.KEY)
-                ?.createGist(e.project!!, e.dataContext)
+                ?.createGist(e.project!!, nodes, model.repository)
         }
     }
 
     override fun update(e: AnActionEvent) {
         val node = e.dataContext.getData(MPSCommonDataKeys.NODE)
-        e.presentation.isEnabled = node != null
+        val nodes = e.dataContext.getData(MPSCommonDataKeys.NODES)
+        e.presentation.isEnabled = nodes != null || node != null
     }
 }
