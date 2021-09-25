@@ -63,7 +63,7 @@ dependencies {
     implementation "org.jetbrains.exposed:exposed-jdbc:$exposed_version"
     implementation "org.jetbrains.exposed:exposed-java-time:$exposed_version"
     implementation "org.postgresql:postgresql:42.2.24"
-    implementation group: 'org.kohsuke', name: 'github-api', version: '1.131'
+    implementation group: 'org.kohsuke', name: 'github-api', version: '1.133'
 
     testImplementation "io.ktor:ktor-server-tests:$ktor_version"
     testImplementation "org.jetbrains.kotlin:kotlin-test-junit5"
