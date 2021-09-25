@@ -22,8 +22,10 @@ import com.intellij.ui.components.JBRadioButton
 import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.components.JBTextArea
 import com.intellij.ui.components.labels.LinkLabel
+import com.intellij.ui.layout.panel
 import com.intellij.ui.scale.JBUIScale
 import com.intellij.util.ui.JBUI
+import com.intellij.util.ui.StatusText
 import com.intellij.util.ui.UIUtil
 import kotlinx.coroutines.runBlocking
 import net.miginfocom.layout.CC
@@ -34,6 +36,7 @@ import org.jetbrains.mps.openapi.module.SRepository
 import java.awt.BorderLayout
 import java.awt.Component
 import java.awt.Container
+import java.awt.Graphics
 import java.awt.event.ActionEvent
 import javax.swing.*
 import javax.swing.event.HyperlinkEvent
@@ -47,26 +50,48 @@ class SkadiToolWindowController(private val window: ToolWindow) {
         val KEY = Key.create<SkadiToolWindowController>("Skadi.Cloud.Gist.ToolWindow.Controller")
     }
 
+
+
     private val titleDocument = PlainDocument()
+    lateinit var emptyText : StatusText
     private val descriptionDocument = PlainDocument()
-    private val wrapper = JPanel()
+    private val wrapper = object: JPanel() {
+        override fun paintComponent(g: Graphics?) {
+            super.paintComponent(g)
+            emptyText.paint(this, g)
+        }
+    }
+    private var showPlaceholder = true
     private val settings = SkadiGistSettings.getInstance()
     private var visiblility = settings.visiblility
 
     fun getContent(): JComponent {
         return wrapper
     }
+    init {
+        emptyText = object : StatusText(wrapper) {
+            override fun isStatusVisible(): Boolean {
+                return showPlaceholder
+            }
+        }
+        placeholderContent()
+    }
+
+    private fun placeholderContent() {
+        emptyText.appendLine("No node(s) selected.")
+        emptyText.appendLine("To create a gist right on ad node in the editor")
+        emptyText.appendLine("or select multiple nodes in the logical view.")
+    }
 
     fun createGist(project: Project, nodes: List<SNode>, repo: SRepository) {
-
         val createAction = CreateGistAction(project, nodes, repo) { visiblility }
-
         val nodeNames = repo.modelAccess.calculateReader { nodes.map { it.presentation } } ?: emptyList()
 
         val cancelAction = object : AbstractAction("Cancel") {
             override fun actionPerformed(e: ActionEvent?) {
                 titleDocument.remove(0, titleDocument.length)
                 descriptionDocument.remove(0, descriptionDocument.length)
+                removeMainContent()
                 window.hide()
             }
         }
@@ -204,6 +229,18 @@ class SkadiToolWindowController(private val window: ToolWindow) {
             add(descriptionPane, CC().grow().push().minWidth("0"))
             add(statusPanel, CC().growX().pushX())
         }
+        setMainContent(newContent)
+    }
+
+    private fun removeMainContent() {
+        showPlaceholder = true
+        wrapper.removeAll()
+        wrapper.revalidate()
+        wrapper.repaint()
+    }
+
+    private fun setMainContent(newContent: JComponent) {
+        showPlaceholder = false
         wrapper.removeAll()
         wrapper.layout = BorderLayout()
         wrapper.add(newContent, BorderLayout.CENTER)
