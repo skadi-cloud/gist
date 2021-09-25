@@ -12,3 +12,4 @@
 /js/node_modules/
 /js/dist/script.js
 /js/dist/script.js.map
+js/.gradle/
