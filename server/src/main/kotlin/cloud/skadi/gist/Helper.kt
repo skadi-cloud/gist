@@ -1,13 +1,19 @@
 package cloud.skadi.gist
 
-import cloud.skadi.gist.data.User
-import cloud.skadi.gist.data.user
+import cloud.skadi.gist.data.*
 import cloud.skadi.gist.plugins.gistSession
 import cloud.skadi.gist.plugins.redirectToLoginAndBack
+import cloud.skadi.gist.shared.GistVisibility
+import cloud.skadi.gist.shared.HEADER_SKADI_TOKEN
 import com.fasterxml.jackson.databind.json.JsonMapper
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import io.ktor.application.*
+import io.ktor.http.*
+import io.ktor.request.*
+import io.ktor.response.*
+import io.ktor.util.*
 import io.seruco.encoding.base62.Base62
+import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import java.nio.ByteBuffer
 import java.util.*
 
@@ -31,17 +37,78 @@ fun UUID.encodeBase62() = base62.encode(
 fun String.decodeBase64() = Base64.getMimeDecoder().decode(this)!!
 
 suspend fun ApplicationCall.authenticated(body: suspend (User) -> Unit) {
-    if (this.gistSession == null) {
-        this.redirectToLoginAndBack()
-        return
+
+    val token = this.request.header(HEADER_SKADI_TOKEN)
+
+    val user = if (token != null)
+        userByToken(token)
+    else gistSession?.user()
+
+    if(gistSession != null){
+        this.application.log.error("Valid session but user (${gistSession?.email}) not found!")
     }
 
-    val user = gistSession!!.user()
-
-    if(user == null) {
-        this.application.log.error("Valid session but user (${gistSession?.email}) not found!")
+    if (user == null) {
         this.redirectToLoginAndBack()
         return
     }
     body(user)
 }
+
+suspend fun ApplicationCall.optionallyAthenticated(body: suspend (User?) -> Unit) {
+
+    val token = this.request.header(HEADER_SKADI_TOKEN)
+
+    val user = if (token != null)
+        userByToken(token)
+    else gistSession?.user()
+
+    if(gistSession != null){
+        this.application.log.error("Valid session but user (${gistSession?.email}) not found!")
+    }
+    body(user)
+}
+
+suspend fun ApplicationCall.withUserReadableGist(block: suspend (Gist, User?) -> Unit) {
+    val token = this.request.header(HEADER_SKADI_TOKEN)
+    val session = this.gistSession
+
+    val user = if (token != null)
+        userByToken(token)
+    else if (session != null)
+        userByEmail(session.email)
+    else
+        null
+
+    val idParam = this.parameters["id"]
+
+    if (idParam == null) {
+        this.respond(HttpStatusCode.BadRequest)
+        return
+    }
+    val gistId = idParam.decodeBase62UUID()
+
+    val gist = newSuspendedTransaction { Gist.findById(gistId) }
+    if (gist == null) {
+        this.application.log.warn("unknown gist: $gistId")
+        this.respond(HttpStatusCode.NotFound)
+        return
+    }
+
+    if (gist.visibility == GistVisibility.Private && gist.user != user) {
+        this.application.log.warn("gist $gistId not visible for user")
+        this.respond(HttpStatusCode.NotFound)
+        return
+    }
+    block(gist, user)
+}
+
+fun ApplicationCall.acceptsTurbo(): Boolean {
+    // accept header contains "text/vnd.turbo-stream.html" when the client support tubro stream updates
+    return false
+}
+
+fun ApplicationCall.url(gist: Gist) =
+    this.url {
+        path("gist", gist.id.value.encodeBase62())
+    }

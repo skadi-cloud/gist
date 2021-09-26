@@ -9,12 +9,12 @@ import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransacti
 fun allPublicGists(page: Int = 0) =
     Gist.find { GistTable.visibility eq GistVisibility.Public }
         .orderBy(GistTable.created to SortOrder.DESC)
-        .limit(50, (50 * page).toLong())
+        .limit(25, (25 * page).toLong())
 
 fun allGistsIncludingUser(user: User, page: Int = 0) =
     Gist.find { (GistTable.visibility eq GistVisibility.Public) or (GistTable.user eq user.id) }
         .orderBy(GistTable.created to SortOrder.DESC)
-        .limit(50, (50 * page).toLong())
+        .limit(25, (25 * page).toLong())
 
 suspend fun userByEmail(email: String) = newSuspendedTransaction {
     User.find { Users.email eq email }.firstOrNull()
@@ -26,3 +26,6 @@ suspend fun userByToken(token: String) =
 suspend fun GistSession.user(): User? = newSuspendedTransaction {
     User.find { Users.email eq this@user.email }.firstOrNull()
 }
+
+fun Gist.isAccessibleBy(user: User?) = this.visibility != GistVisibility.Private || (user != null && this.user == user)
+fun Gist.isEditableBy(user: User?) = user != null && this.user == user

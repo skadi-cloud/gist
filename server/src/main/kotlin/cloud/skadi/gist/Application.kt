@@ -3,7 +3,9 @@ package cloud.skadi.gist
 import cloud.skadi.gist.data.*
 import cloud.skadi.gist.plugins.*
 import cloud.skadi.gist.routing.configureGistRoutes
+import cloud.skadi.gist.routing.configureHomeRouting
 import cloud.skadi.gist.routing.configureIdeRoutes
+import cloud.skadi.gist.turbo.TurboStreamMananger
 import getEnvOfFail
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
@@ -42,11 +44,13 @@ fun initDb(jdbc: String, database: String, user: String, password: String): Bool
     }
 }
 
+@ExperimentalStdlibApi
 fun main() {
 
     initDb("jdbc:postgresql://$SQL_HOST/",SQL_DB,SQL_USER, SQL_PASSWORD)
     val storage = DirectoryBasedStorage(File("data"), "rendered")
-
+    val tsm = TurboStreamMananger()
+    val store = GistStorage(storage::get, storage::put)
     embeddedServer(Netty, environment = applicationEngineEnvironment {
         connector {
             port = 8080
@@ -60,8 +64,9 @@ fun main() {
             configureMonitoring()
             configureTemplating()
             configureSockets()
-            configureGistRoutes(storage::put, storage::get)
+            configureGistRoutes(tsm, storage::put, storage::get)
             configureIdeRoutes()
+            configureHomeRouting(tsm, store)
             storage.install(this)
         }
     }).start(wait = true)

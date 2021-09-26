@@ -4,7 +4,11 @@ import cloud.skadi.gist.*
 import cloud.skadi.gist.data.*
 import cloud.skadi.gist.plugins.gistSession
 import cloud.skadi.gist.shared.*
+import cloud.skadi.gist.turbo.*
+import cloud.skadi.gist.views.CSSClasses
 import cloud.skadi.gist.views.RootTemplate
+import cloud.skadi.gist.views.gistRoot
+import cloud.skadi.gist.views.mainDivId
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.vladsch.flexmark.parser.ParserEmulationProfile
@@ -15,14 +19,18 @@ import io.ktor.request.*
 import io.ktor.response.*
 import io.ktor.routing.*
 import io.ktor.util.*
-import kotlinx.html.*
+import kotlinx.html.h2
+import kotlinx.html.p
+import kotlinx.html.unsafe
+import org.jetbrains.exposed.sql.SizedCollection
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
-import java.io.InputStream
 import java.time.LocalDateTime
 
+@ExperimentalStdlibApi
 fun Application.configureGistRoutes(
-    upload: suspend (GistRoot, InputStream) -> Unit,
-    url: (ApplicationCall, GistRoot) -> UrlList
+    tsm: TurboStreamMananger,
+    upload: GistStore,
+    url: GistUrlProvider,
 ) {
     routing {
         post("/gist/create") {
@@ -83,47 +91,25 @@ fun Application.configureGistRoutes(
             call.respondRedirect(call.url {
                 path("gist", encodedId)
             })
-
+            if (gistAndRoots.first.visibility == GistVisibility.Public) {
+                newSuspendedTransaction {
+                    tsm.sendTurboChannelUpdate(gistAndRoots.first.id.value, GistUpdate.Added(gistAndRoots.first))
+                }
+            }
         }
         get("/gist/{id}") {
             call.withUserReadableGist { gist, user ->
                 newSuspendedTransaction {
-
-                    ParserEmulationProfile.COMMONMARK
                     call.respondHtmlTemplate(RootTemplate("Skadi Gist", user = user)) {
                         content {
-                            h2(classes = "gist-name") {
+                            h2(classes = CSSClasses.GistName.className) {
                                 +gist.name
                             }
-                            p(classes = "gist-description") {
+                            p(classes = CSSClasses.GistDescription.className) {
                                 unsafe { +markdownToHtml(gist.description ?: "") }
                             }
                             gist.roots.notForUpdate().forEach { root ->
-                                div(classes = "root") {
-                                    h3(classes = "root-name") {
-                                        root.name
-                                    }
-                                    img(classes = "rendered") {
-                                        src = url(call, root).mainUrl
-                                    }
-
-                                    div(classes = "comments") {
-                                        root.comments.notForUpdate().forEach { comment ->
-                                            div(classes = "comment") {
-                                                p {
-                                                    +comment.markdown
-                                                }
-                                            }
-                                        }
-                                        if (call.gistSession != null) {
-                                            div(classes = "create-comment") {
-                                                form {
-
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
+                                gistRoot({ url(call, it) }, root)
                             }
                         }
                     }
@@ -138,39 +124,29 @@ fun Application.configureGistRoutes(
                 call.respond(ImportGistMessage(gist.name, jsonNodes))
             }
         }
+
+        post("/gist/{id}/toggle-like") {
+            call.withUserReadableGist { gist, user ->
+                if (user == null) {
+                    call.respond(HttpStatusCode.Unauthorized)
+                    return@withUserReadableGist
+                }
+                newSuspendedTransaction {
+                    if (gist.likedBy.contains(user)) {
+                        gist.likedBy = SizedCollection(gist.likedBy - user)
+                    } else {
+                        gist.likedBy = SizedCollection(gist.likedBy + user)
+                    }
+                }
+                if(call.acceptsTurbo()) {
+                    // nothing to do, client will get the update via TSM.
+                    call.respond(HttpStatusCode.OK)
+                } else {
+                    call.respondRedirect("")
+                }
+                tsm.sendTurboChannelUpdate(gist.id.value.toString(), GistUpdate.Edited(gist))
+            }
+        }
     }
 }
 
-suspend fun ApplicationCall.withUserReadableGist(block: suspend (Gist, User?) -> Unit) {
-    val token = this.request.header(HEADER_SKADI_TOKEN)
-    val session = this.gistSession
-
-    val user = if (token != null)
-        userByToken(token)
-    else if (session != null)
-        userByEmail(session.email)
-    else
-        null
-
-    val idParam = this.parameters["id"]
-
-    if (idParam == null) {
-        this.respond(HttpStatusCode.BadRequest)
-        return
-    }
-    val gistId = idParam.decodeBase62UUID()
-
-    val gist = newSuspendedTransaction { Gist.findById(gistId) }
-    if (gist == null) {
-        this.application.log.warn("unknown gist: $gistId")
-        this.respond(HttpStatusCode.NotFound)
-        return
-    }
-
-    if (gist.visibility == GistVisibility.Private && gist.user != user) {
-        this.application.log.warn("gist $gistId not visible for user")
-        this.respond(HttpStatusCode.NotFound)
-        return
-    }
-    block(gist, user)
-}

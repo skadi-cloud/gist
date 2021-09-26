@@ -4,6 +4,14 @@ import cloud.skadi.gist.data.User
 import io.ktor.html.*
 import kotlinx.html.*
 
+enum class CSSClasses(val className: String) {
+    GistDescription("gist-description"),
+    GistName("gist-name"),
+    GistRoot("root")
+    ;
+    override fun toString() = className
+}
+
 fun HEAD.favicons() {
     link {
         rel = "apple-touch-icon"
@@ -53,12 +61,6 @@ class RootTemplate(private val pageName: String, private val user: User? = null)
             title { +pageName }
             styleLink("/assets/styles/styles.css")
             favicons()
-            script {
-                src = "https://plausible.io/js/plausible.js"
-                defer = true
-                async = true
-                attributes["data-domain"] = "gist.skadi.cloud"
-            }
         }
         body {
             div() {

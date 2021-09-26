@@ -1,5 +1,6 @@
 package cloud.skadi.gist.data
 
+import cloud.skadi.gist.data.GistRoot.Companion.referrersOn
 import cloud.skadi.gist.shared.GistVisibility
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
@@ -9,7 +10,7 @@ import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.dao.id.UUIDTable
 import org.jetbrains.exposed.sql.Table
-import org.jetbrains.exposed.sql.`java-time`.datetime
+import org.jetbrains.exposed.sql.javatime.datetime
 import java.util.*
 
 object Users : IntIdTable() {
@@ -61,6 +62,7 @@ class Gist(id: EntityID<UUID>): UUIDEntity(id) {
     var user by User optionalReferencedOn GistTable.user
     var created by GistTable.created
     val roots by GistRoot referrersOn GistRootTable.gist
+    val comments by Comment referrersOn CommentTable.gist
     var likedBy by User via LikeTable
 }
 
@@ -77,19 +79,18 @@ class GistRoot(id: EntityID<UUID>): UUIDEntity(id) {
     var name by GistRootTable.name
     var node by GistRootTable.node
     var isRoot by GistRootTable.isRoot
-    val comments by Comment referrersOn CommentTable.root
 }
 
 object CommentTable: IntIdTable() {
     val user = reference("user", Users)
-    val root = reference("root", GistRootTable)
+    val gist = reference("gist", GistTable)
     val markdown = text("markdown")
 }
 
 class Comment(id: EntityID<Int>): IntEntity(id) {
     companion object : IntEntityClass<Comment>(CommentTable)
     var user by User referencedOn CommentTable.user
-    var root by GistRoot referencedOn CommentTable.root
+    var root by Gist referencedOn CommentTable.gist
     var markdown by CommentTable.markdown
 }
 
