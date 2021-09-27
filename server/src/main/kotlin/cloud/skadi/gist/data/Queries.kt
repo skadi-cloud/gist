@@ -17,14 +17,14 @@ fun allGistsIncludingUser(user: User, page: Int = 0) =
         .limit(25, (25 * page).toLong())
 
 suspend fun userByEmail(email: String) = newSuspendedTransaction {
-    User.find { Users.email eq email }.firstOrNull()
+    User.find { UserTable.email eq email }.firstOrNull()
 }
 
 suspend fun userByToken(token: String) =
     newSuspendedTransaction { Token.find { TokenTable.token eq token }.firstOrNull()?.user }
 
 suspend fun GistSession.user(): User? = newSuspendedTransaction {
-    User.find { Users.email eq this@user.email }.firstOrNull()
+    User.find { UserTable.email eq this@user.email }.firstOrNull()
 }
 
 fun Gist.isAccessibleBy(user: User?) = this.visibility != GistVisibility.Private || (user != null && this.user == user)

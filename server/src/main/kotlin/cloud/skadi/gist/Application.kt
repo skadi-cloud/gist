@@ -33,7 +33,7 @@ fun initDb(jdbc: String, database: String, user: String, password: String): Bool
     return transaction {
         try {
             withDataBaseLock {
-                SchemaUtils.createMissingTablesAndColumns(Users, GistTable, GistRootTable, TokenTable, LikeTable, CommentTable)
+                SchemaUtils.createMissingTablesAndColumns(UserTable, GistTable, GistRootTable, TokenTable, LikeTable, CommentTable)
             }
         } catch (e: Throwable) {
             logger.error("error updating schema" ,e)
