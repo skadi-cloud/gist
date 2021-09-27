@@ -45,14 +45,14 @@ class SkadiNonceManager(val call: ApplicationCall) : NonceManager {
     override suspend fun newNonce(): String {
         nonce = generateNonce()
         val redirectTarget = call.parameters[REDIRECT_PARAM]
-        if (redirectTarget != null) {
-            return "${nonce!!}:${
+        return if (redirectTarget != null) {
+            "${nonce!!}:${
                 redirectTarget.let {
                     Base64.getUrlEncoder().encodeToString(it.toByteArray(Charsets.UTF_8))
                 }
             }"
         } else {
-            return nonce!!
+            nonce!!
         }
     }
 
@@ -63,7 +63,6 @@ class SkadiNonceManager(val call: ApplicationCall) : NonceManager {
 
 
 fun ApplicationCall.getRedirectTargetFromState(): String? {
-
     return this.parameters["state"]?.split(":")?.getOrNull(1)
         ?.let {
             String(Base64.getUrlDecoder().decode(it), charset = Charsets.UTF_8)
@@ -148,6 +147,7 @@ fun Application.configureOAuth() {
                                 this.login = login
                                 this.regDate = LocalDateTime.now()
                                 this.lastLogin = LocalDateTime.now()
+                                this.avatarUrl = myself.avatarUrl
                             }
                         }
                     } else {

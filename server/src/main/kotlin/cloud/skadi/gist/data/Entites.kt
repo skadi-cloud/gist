@@ -18,6 +18,7 @@ object UserTable : IntIdTable() {
     val lastLogin = datetime("last-login-date")
     val login = varchar("login", 1024).uniqueIndex()
     val name = varchar("name", 1024)
+    val avatarUrl = varchar("avatarUrl", 2048).nullable()
 }
 
 class User(id: EntityID<Int>) : IntEntity(id) {
@@ -27,6 +28,7 @@ class User(id: EntityID<Int>) : IntEntity(id) {
     var lastLogin by UserTable.lastLogin
     var login by UserTable.login
     var name by UserTable.name
+    var avatarUrl by UserTable.avatarUrl
     var likedGists by Gist via LikeTable
 }
 
