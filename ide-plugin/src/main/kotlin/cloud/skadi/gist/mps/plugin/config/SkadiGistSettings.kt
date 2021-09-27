@@ -41,7 +41,12 @@ class SkadiGistSettings : PersistentStateComponentWithModificationTracker<SkadiG
     var backendAddress: String
         get() = state.backendAddress.orEmpty().ifEmpty { DEFAULT_BACKEND }
         set(value) {
-            state.backendAddress = value
+            if(!value.endsWith("/"))
+            {
+                state.backendAddress = "$value/"
+            } else {
+                state.backendAddress = value
+            }
         }
 
     var rememberVisiblility
@@ -112,7 +117,7 @@ class SkadiGistSettings : PersistentStateComponentWithModificationTracker<SkadiG
     }
 
     companion object {
-        const val DEFAULT_BACKEND = "http://localhost:8080/"
+        const val DEFAULT_BACKEND = "https://gist.skadi.cloud/"
 
         @JvmStatic
         fun getInstance() = ApplicationManager.getApplication().getService(SkadiGistSettings::class.java)

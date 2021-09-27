@@ -18,6 +18,7 @@ import com.intellij.openapi.wm.ToolWindow
 import com.intellij.ui.IdeBorderFactory
 import com.intellij.ui.JBColor
 import com.intellij.ui.SideBorder
+import com.intellij.ui.SimpleTextAttributes
 import com.intellij.ui.components.JBRadioButton
 import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.components.JBTextArea
@@ -38,6 +39,7 @@ import java.awt.Component
 import java.awt.Container
 import java.awt.Graphics
 import java.awt.event.ActionEvent
+import java.awt.event.ActionListener
 import javax.swing.*
 import javax.swing.event.HyperlinkEvent
 import javax.swing.text.PlainDocument
@@ -81,6 +83,11 @@ class SkadiToolWindowController(private val window: ToolWindow) {
         emptyText.appendLine("No node(s) selected.")
         emptyText.appendLine("To create a gist right on ad node in the editor")
         emptyText.appendLine("or select multiple nodes in the logical view.")
+        emptyText.appendLine("")
+        emptyText.appendLine("Help", SimpleTextAttributes.LINK_ATTRIBUTES, ActionListener {
+            val gistSettings = SkadiGistSettings.getInstance()
+            BrowserUtil.browse(gistSettings.backendAddress + "how-to")
+        })
     }
 
     fun createGist(project: Project, nodes: List<SNode>, repo: SRepository) {
@@ -273,6 +280,10 @@ class SkadiToolWindowController(private val window: ToolWindow) {
         val getVisibility: () -> SkadiGistSettings.Visiblility,
     ) : AbstractAction("Create gist") {
         override fun actionPerformed(e: ActionEvent?) {
+            titleDocument.remove(0, titleDocument.length)
+            descriptionDocument.remove(0, descriptionDocument.length)
+            removeMainContent()
+            window.hide()
 
             object : Task.Backgroundable(project, "Create gist") {
                 override fun run(indicator: ProgressIndicator) {
