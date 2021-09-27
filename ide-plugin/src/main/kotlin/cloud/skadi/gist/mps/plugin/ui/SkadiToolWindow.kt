@@ -6,10 +6,15 @@ import cloud.skadi.gist.mps.plugin.upload
 import cloud.skadi.gist.shared.GistVisibility
 import com.intellij.icons.AllIcons
 import com.intellij.ide.BrowserUtil
+import com.intellij.ide.CopyPasteManagerEx
+import com.intellij.ide.CopyPasteUtil
 import com.intellij.ide.actions.ShowSettingsUtilImpl
 import com.intellij.ide.plugins.newui.HorizontalLayout
+import com.intellij.notification.Notification
+import com.intellij.notification.NotificationAction
 import com.intellij.notification.NotificationGroupManager
 import com.intellij.notification.NotificationType
+import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.progress.Task
 import com.intellij.openapi.project.Project
@@ -23,7 +28,6 @@ import com.intellij.ui.components.JBRadioButton
 import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.components.JBTextArea
 import com.intellij.ui.components.labels.LinkLabel
-import com.intellij.ui.layout.panel
 import com.intellij.ui.scale.JBUIScale
 import com.intellij.util.ui.JBUI
 import com.intellij.util.ui.StatusText
@@ -38,10 +42,10 @@ import java.awt.BorderLayout
 import java.awt.Component
 import java.awt.Container
 import java.awt.Graphics
+import java.awt.datatransfer.StringSelection
 import java.awt.event.ActionEvent
 import java.awt.event.ActionListener
 import javax.swing.*
-import javax.swing.event.HyperlinkEvent
 import javax.swing.text.PlainDocument
 
 
@@ -53,11 +57,10 @@ class SkadiToolWindowController(private val window: ToolWindow) {
     }
 
 
-
     private val titleDocument = PlainDocument()
-    lateinit var emptyText : StatusText
+    lateinit var emptyText: StatusText
     private val descriptionDocument = PlainDocument()
-    private val wrapper = object: JPanel() {
+    private val wrapper = object : JPanel() {
         override fun paintComponent(g: Graphics?) {
             super.paintComponent(g)
             emptyText.paint(this, g)
@@ -70,6 +73,7 @@ class SkadiToolWindowController(private val window: ToolWindow) {
     fun getContent(): JComponent {
         return wrapper
     }
+
     init {
         emptyText = object : StatusText(wrapper) {
             override fun isStatusVisible(): Boolean {
@@ -280,11 +284,6 @@ class SkadiToolWindowController(private val window: ToolWindow) {
         val getVisibility: () -> SkadiGistSettings.Visiblility,
     ) : AbstractAction("Create gist") {
         override fun actionPerformed(e: ActionEvent?) {
-            titleDocument.remove(0, titleDocument.length)
-            descriptionDocument.remove(0, descriptionDocument.length)
-            removeMainContent()
-            window.hide()
-
             object : Task.Backgroundable(project, "Create gist") {
                 override fun run(indicator: ProgressIndicator) {
                     runBlocking {
@@ -299,19 +298,26 @@ class SkadiToolWindowController(private val window: ToolWindow) {
                         val notificationGroup =
                             NotificationGroupManager.getInstance().getNotificationGroup("Skadi Gist")
                         if (url != null) {
-                            val content = "Your gist is available <a href=\"$url\">here</a>"
                             notificationGroup.createNotification(
-                                "Gist created",
-                                content,
+                                "Gist created successfully",
+                                "",
                                 NotificationType.INFORMATION
-                            ) { _, event ->
-                                if (event.eventType != HyperlinkEvent.EventType.ACTIVATED) {
-                                    return@createNotification
+                            ).addAction(object : NotificationAction("Open in Browser") {
+                                override fun actionPerformed(e: AnActionEvent, notification: Notification) {
+                                    BrowserUtil.browse(url)
+                                    notification.expire()
                                 }
-                                if (event.url != null) {
-                                    BrowserUtil.browse(event.url.toExternalForm())
+                            }).addAction(object : NotificationAction("Copy URL") {
+                                override fun actionPerformed(e: AnActionEvent, notification: Notification) {
+                                    CopyPasteManagerEx.getInstanceEx().setContents(StringSelection(url))
+                                    notification.expire()
                                 }
-                            }.notify(project)
+                            }).notify(project)
+
+                            titleDocument.remove(0, titleDocument.length)
+                            descriptionDocument.remove(0, descriptionDocument.length)
+                            removeMainContent()
+                            window.hide()
                         } else {
                             notificationGroup.createNotification(
                                 "Error creating gist",
