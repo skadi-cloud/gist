@@ -66,7 +66,8 @@ suspend fun upload(
     description: String?,
     visibility: GistVisibility,
     nodes: List<SNode>,
-    repository: SRepository
+    repository: SRepository,
+    token: String?
 ): String? {
     val gistCreationRequest = GistCreationRequest(
         name = name,
@@ -87,6 +88,8 @@ suspend fun upload(
             )
         })
     val response = client.post<HttpResponse>(HOST) {
+        if (token != null)
+            header(HEADER_SKADI_TOKEN, token)
         expectSuccess = false
         contentType(ContentType.Application.Json)
         body = mapper.writeValueAsString(gistCreationRequest)

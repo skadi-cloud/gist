@@ -293,7 +293,8 @@ class SkadiToolWindowController(private val window: ToolWindow) {
                             descriptionDocument.getText(0, descriptionDocument.length),
                             getVisibility().toModel(),
                             nodes,
-                            repo
+                            repo,
+                            settings.deviceToken
                         )
                         val notificationGroup =
                             NotificationGroupManager.getInstance().getNotificationGroup("Skadi Gist")
