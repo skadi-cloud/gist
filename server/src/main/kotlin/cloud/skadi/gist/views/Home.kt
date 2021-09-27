@@ -23,6 +23,7 @@ fun FlowContent.editControlls(gist: Gist) = div {
     }
 }
 
+
 fun FlowContent.likeable(gist: Gist, user: User) = div {
     form {
         method = FormMethod.post
@@ -37,26 +38,69 @@ fun FlowContent.likeable(gist: Gist, user: User) = div {
     }
 }
 
-fun FlowContent.mainHtmlFragment(gist: Gist, getScreenShotUrl: (GistRoot) -> UrlList, getUrl: (Gist) -> String, user: User?) = div(classes = "gist") {
-    id = gist.mainDivId()
-    if (gist.isEditableBy(user)) {
-        editControlls(gist)
-    }
-    if (user != null && gist.user != user) {
-        likeable(gist, user)
-    }
-    h2 {
-        a {
-            href = getUrl(gist)
-            +gist.name
+const val DEFAULT_USER_IMAGE = ""
+fun FlowContent.userDetailsAndName(gist: Gist, getUrl: (Gist) -> String) {
+    val user = gist.user
+    div {
+        img {
+            src = user?.avatarUrl ?: DEFAULT_USER_IMAGE
+        }
+        span {
+            if (user != null) {
+                a {
+                    href = "/user/${user.login}"
+                    +user.login
+                }
+            } else {
+                p {
+                    +"Annonymous"
+                }
+            }
+            +"/"
+            a {
+                href = getUrl(gist)
+                +gist.name
+            }
+
         }
     }
-    p {
-        unsafe { +markdownToHtml(gist.description ?: "") }
+}
+
+fun FlowContent.gistMetadata(gist: Gist, user: User?) {
+    div("facts") {
+        ul {
+            li(classes = "roots") {
+                +"${gist.roots.count()} roots"
+            }
+            li("comments") {
+                +"${gist.comments.count()} comments"
+            }
+            li("stars") {
+                if (user != null && gist.user != user) {
+                    likeable(gist, user)
+                }
+                +"${gist.likedBy.count()} stars"
+            }
+        }
+    }
+}
+
+fun FlowContent.gistSummary(
+    gist: Gist,
+    getScreenShotUrl: (GistRoot) -> UrlList,
+    getUrl: (Gist) -> String,
+    user: User?
+) = div(classes = "gist snippet") {
+    id = gist.mainDivId()
+    div("meta") {
+        userDetailsAndName(gist, getUrl)
+        gistMetadata(gist, user)
+        if (gist.isEditableBy(user)) {
+            editControlls(gist)
+        }
+        p(classes = "summary") {
+            unsafe { +markdownToHtml(gist.description?.take(1024) ?: "") }
+        }
     }
     gistRoot(getScreenShotUrl, gist.roots.first())
-    div {
-        p("comment-count") { +gist.comments.count().toString() }
-        p("likes") { +gist.likedBy.count().toString() }
-    }
 }

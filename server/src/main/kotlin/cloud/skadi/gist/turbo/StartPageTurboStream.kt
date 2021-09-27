@@ -7,7 +7,7 @@ import cloud.skadi.gist.data.User
 import cloud.skadi.gist.url
 import cloud.skadi.gist.views.HTML_ID_GIST_CONTAINER
 import cloud.skadi.gist.views.mainDivId
-import cloud.skadi.gist.views.mainHtmlFragment
+import cloud.skadi.gist.views.gistSummary
 import io.ktor.websocket.*
 import org.slf4j.LoggerFactory
 
@@ -32,7 +32,7 @@ class StartPageTurboStream(
         return when (data) {
             is GistUpdate.Added -> send {
                 turboPrepend(HTML_ID_GIST_CONTAINER) {
-                    mainHtmlFragment(
+                    gistSummary(
                         data.gist,
                         urlGetter,
                         { session.call.url(it) },
@@ -43,7 +43,7 @@ class StartPageTurboStream(
             is GistUpdate.Removed -> send { turboRemove(targetId) }
             is GistUpdate.Edited -> send {
                 turboReplace(targetId) {
-                    mainHtmlFragment(
+                    gistSummary(
                         data.gist,
                         urlGetter,
                         { session.call.url(it) },

@@ -7,7 +7,7 @@ import cloud.skadi.gist.turbo.StartPageTurboStream
 import cloud.skadi.gist.turbo.TurboStreamMananger
 import cloud.skadi.gist.url
 import cloud.skadi.gist.views.RootTemplate
-import cloud.skadi.gist.views.mainHtmlFragment
+import cloud.skadi.gist.views.gistSummary
 import io.ktor.application.*
 import io.ktor.html.*
 import io.ktor.routing.*
@@ -23,7 +23,7 @@ fun Application.configureHomeRouting(tsm: TurboStreamMananger, store: GistStorag
                     call.respondHtmlTemplate(RootTemplate("Home", user)) {
                         content {
                             allPublicGists().notForUpdate().forEach { gist ->
-                                mainHtmlFragment(gist, { store.get(call, it) }, { call.url(it) }, user)
+                                gistSummary(gist, { store.get(call, it) }, { call.url(it) }, user)
                             }
                         }
                     }

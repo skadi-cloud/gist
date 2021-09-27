@@ -66,6 +66,15 @@ a, a:visited {
 img.rendered {
     max-width: 100%;
 }
+
+.gist.snippet img.rendered {
+    width: 100%;
+    max-width: 100%;
+    object-fit: cover;
+    max-height: 200px;
+    object-position: top;
+}
+
 @media (min-width: 768px) {
     .container {
         width: 90%;
