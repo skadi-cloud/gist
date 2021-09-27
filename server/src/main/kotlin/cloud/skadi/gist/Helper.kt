@@ -22,7 +22,7 @@ private val mapper = JsonMapper.builder()
     .addModule(KotlinModule(strictNullChecks = true))
     .build()
 
-fun Any.asJson() = mapper.writeValueAsString(this)
+fun Any.asJson() = mapper.writeValueAsString(this)!!
 fun String.decodeBase62UUID(): UUID {
     val decoded = base62.decode(this.toByteArray())
     val bytes = ByteBuffer.allocate(decoded.size).put(decoded).rewind()
@@ -37,7 +37,6 @@ fun UUID.encodeBase62() = base62.encode(
 fun String.decodeBase64() = Base64.getMimeDecoder().decode(this)!!
 
 suspend fun ApplicationCall.authenticated(body: suspend (User) -> Unit) {
-
     val token = this.request.header(HEADER_SKADI_TOKEN)
 
     val user = if (token != null)

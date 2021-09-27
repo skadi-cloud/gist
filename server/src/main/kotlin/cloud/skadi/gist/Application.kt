@@ -6,7 +6,6 @@ import cloud.skadi.gist.routing.configureGistRoutes
 import cloud.skadi.gist.routing.configureHomeRouting
 import cloud.skadi.gist.routing.configureIdeRoutes
 import cloud.skadi.gist.turbo.TurboStreamMananger
-import getEnvOfFail
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import org.jetbrains.exposed.sql.Database

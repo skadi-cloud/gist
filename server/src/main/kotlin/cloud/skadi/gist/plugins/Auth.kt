@@ -2,7 +2,7 @@ package cloud.skadi.gist.plugins
 
 import cloud.skadi.gist.data.User
 import cloud.skadi.gist.data.userByEmail
-import getEnvOrDefault
+import cloud.skadi.gist.getEnvOrDefault
 import io.ktor.application.*
 import io.ktor.auth.*
 import io.ktor.client.*
