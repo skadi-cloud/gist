@@ -1,9 +1,9 @@
 package cloud.skadi.gist.turbo
 
-import cloud.skadi.gist.UrlList
 import cloud.skadi.gist.data.Gist
 import cloud.skadi.gist.data.GistRoot
 import cloud.skadi.gist.data.User
+import cloud.skadi.gist.storage.UrlList
 import cloud.skadi.gist.url
 import cloud.skadi.gist.views.HTML_ID_GIST_CONTAINER
 import cloud.skadi.gist.views.mainDivId
