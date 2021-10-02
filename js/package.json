@@ -6,7 +6,7 @@
   "dependencies": {
     "@hotwired/stimulus": "^3.0.0",
     "@hotwired/stimulus-webpack-helpers": "^1.0.1",
-    "@hotwired/turbo": "^7.0.0",
+    "@hotwired/turbo": "^7.0.1",
     "easymde": "^2.15.0"
   },
   "devDependencies": {
