@@ -5,6 +5,7 @@ import cloud.skadi.gist.shared.GistVisibility
 import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.or
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
+import java.time.LocalDateTime
 
 fun allPublicGists(page: Int = 0) =
     Gist.find { GistTable.visibility eq GistVisibility.Public }
@@ -20,8 +21,13 @@ suspend fun userByEmail(email: String) = newSuspendedTransaction {
     User.find { UserTable.email eq email }.firstOrNull()
 }
 
-suspend fun userByToken(token: String) =
-    newSuspendedTransaction { Token.find { TokenTable.token eq token }.firstOrNull()?.user }
+suspend fun userByToken(token: String, updateLastUsed: Boolean = true) =
+    newSuspendedTransaction {
+        val dbToken = Token.find { TokenTable.token eq token }.firstOrNull()
+        if(updateLastUsed)
+            dbToken?.lastUsed = LocalDateTime.now()
+        dbToken?.user
+    }
 
 suspend fun GistSession.user(): User? = newSuspendedTransaction {
     User.find { UserTable.email eq this@user.email }.firstOrNull()

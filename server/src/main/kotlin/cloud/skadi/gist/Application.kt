@@ -5,6 +5,8 @@ import cloud.skadi.gist.plugins.*
 import cloud.skadi.gist.routing.configureGistRoutes
 import cloud.skadi.gist.routing.configureHomeRouting
 import cloud.skadi.gist.routing.configureIdeRoutes
+import cloud.skadi.gist.routing.configureUserRouting
+import cloud.skadi.gist.storage.DirectoryBasedStorage
 import cloud.skadi.gist.turbo.TurboStreamMananger
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
@@ -49,7 +51,6 @@ fun main() {
     initDb("jdbc:postgresql://$SQL_HOST/",SQL_DB,SQL_USER, SQL_PASSWORD)
     val storage = DirectoryBasedStorage(File("data"), "rendered")
     val tsm = TurboStreamMananger()
-    val store = GistStorage(storage::get, storage::put)
     embeddedServer(Netty, environment = applicationEngineEnvironment {
         connector {
             port = 8080
@@ -63,9 +64,10 @@ fun main() {
             configureMonitoring()
             configureTemplating()
             configureSockets()
-            configureGistRoutes(tsm, storage::put, storage::get)
+            configureGistRoutes(tsm, storage)
             configureIdeRoutes()
-            configureHomeRouting(tsm, store)
+            configureHomeRouting(tsm, storage)
+            configureUserRouting()
             storage.install(this)
         }
     }).start(wait = true)

@@ -1,12 +1,12 @@
 package cloud.skadi.gist.views
 
-import cloud.skadi.gist.UrlList
 import cloud.skadi.gist.data.Gist
 import cloud.skadi.gist.data.GistRoot
 import cloud.skadi.gist.data.User
 import cloud.skadi.gist.data.isEditableBy
 import cloud.skadi.gist.encodeBase62
 import cloud.skadi.gist.markdownToHtml
+import cloud.skadi.gist.storage.UrlList
 import kotlinx.html.*
 
 fun Gist.mainDivId() = "gist-${this.id.value.encodeBase62()}"
@@ -41,7 +41,7 @@ fun FlowContent.likeable(gist: Gist, user: User) = div {
 const val DEFAULT_USER_IMAGE = ""
 fun FlowContent.userDetailsAndName(gist: Gist, getUrl: (Gist) -> String) {
     val user = gist.user
-    div {
+    div("name-and-user") {
         img {
             src = user?.avatarUrl ?: DEFAULT_USER_IMAGE
         }
@@ -59,7 +59,7 @@ fun FlowContent.userDetailsAndName(gist: Gist, getUrl: (Gist) -> String) {
             +"/"
             a {
                 href = getUrl(gist)
-                +gist.name
+                +gist.name.ifEmpty { "No name" }
             }
 
         }
@@ -72,6 +72,7 @@ fun FlowContent.gistMetadata(gist: Gist, user: User?) {
             li(classes = "roots") {
                 +"${gist.roots.count()} roots"
             }
+            /*
             li("comments") {
                 +"${gist.comments.count()} comments"
             }
@@ -80,7 +81,7 @@ fun FlowContent.gistMetadata(gist: Gist, user: User?) {
                     likeable(gist, user)
                 }
                 +"${gist.likedBy.count()} stars"
-            }
+            }*/
         }
     }
 }
@@ -96,11 +97,11 @@ fun FlowContent.gistSummary(
         userDetailsAndName(gist, getUrl)
         gistMetadata(gist, user)
         if (gist.isEditableBy(user)) {
-            editControlls(gist)
+            //editControlls(gist)
         }
-        p(classes = "summary") {
-            unsafe { +markdownToHtml(gist.description?.take(1024) ?: "") }
-        }
+    }
+    p(classes = "summary") {
+        unsafe { +markdownToHtml(gist.description?.take(1024) ?: "") }
     }
     gistRoot(getScreenShotUrl, gist.roots.first())
 }

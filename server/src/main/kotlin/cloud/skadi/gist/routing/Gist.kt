@@ -4,6 +4,8 @@ import cloud.skadi.gist.*
 import cloud.skadi.gist.data.*
 import cloud.skadi.gist.plugins.gistSession
 import cloud.skadi.gist.shared.*
+import cloud.skadi.gist.storage.DirectoryBasedStorage
+import cloud.skadi.gist.storage.StorageProvider
 import cloud.skadi.gist.turbo.*
 import cloud.skadi.gist.views.CSSClasses
 import cloud.skadi.gist.views.RootTemplate
@@ -29,8 +31,7 @@ import java.time.LocalDateTime
 @ExperimentalStdlibApi
 fun Application.configureGistRoutes(
     tsm: TurboStreamMananger,
-    upload: GistStore,
-    url: GistUrlProvider,
+    storage: StorageProvider,
 ) {
     routing {
         post("/gist/create") {
@@ -83,7 +84,7 @@ fun Application.configureGistRoutes(
 
             newSuspendedTransaction {
                 gistAndRoots.second.forEach {
-                    upload(it.first, it.second)
+                    storage.storeRoot(it.first, it.second)
                 }
             }
 
@@ -109,7 +110,7 @@ fun Application.configureGistRoutes(
                                 unsafe { +markdownToHtml(gist.description ?: "") }
                             }
                             gist.roots.notForUpdate().forEach { root ->
-                                gistRoot({ url(call, it) }, root)
+                                gistRoot({ storage.getUrls(call, it) }, root)
                             }
                         }
                     }

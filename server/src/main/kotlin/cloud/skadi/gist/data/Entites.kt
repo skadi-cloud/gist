@@ -1,5 +1,6 @@
 package cloud.skadi.gist.data
 
+import cloud.skadi.gist.data.Gist.Companion.referrersOn
 import cloud.skadi.gist.shared.GistVisibility
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
@@ -30,11 +31,13 @@ class User(id: EntityID<Int>) : IntEntity(id) {
     var name by UserTable.name
     var avatarUrl by UserTable.avatarUrl
     var likedGists by Gist via LikeTable
+    val tokens by Token referrersOn TokenTable.user
 }
 
 object TokenTable: IntIdTable() {
     val token = varchar("token", 256).uniqueIndex()
     val created = datetime("created")
+    val lastUsed = datetime("last-used").nullable()
     val name = varchar("name", 256)
     val user = reference("user", UserTable)
 }
@@ -44,6 +47,7 @@ class Token(id: EntityID<Int>): IntEntity(id) {
     var token by TokenTable.token
     var user by User referencedOn TokenTable.user
     var created by TokenTable.created
+    var lastUsed by TokenTable.lastUsed
     var name by TokenTable.name
 }
 

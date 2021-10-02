@@ -1,6 +1,9 @@
-package cloud.skadi.gist
+package cloud.skadi.gist.storage
 
+import cloud.skadi.gist.data.Gist
 import cloud.skadi.gist.data.GistRoot
+import cloud.skadi.gist.decodeBase62UUID
+import cloud.skadi.gist.encodeBase62
 import io.ktor.application.*
 import io.ktor.http.*
 import io.ktor.response.*
@@ -13,13 +16,7 @@ import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.InputStream
 
-
-data class ScaledGist(val dimension: String, val url: String)
-data class UrlList(val mainUrl: String, val scaled: List<ScaledGist>)
-
-
-
-class DirectoryBasedStorage(private val directory: File, private val prefix: String) {
+class DirectoryBasedStorage(private val directory: File, private val prefix: String): StorageProvider {
 
     init {
         directory.mkdirs()
@@ -46,7 +43,22 @@ class DirectoryBasedStorage(private val directory: File, private val prefix: Str
             }
         }
     }
-    suspend fun put(root: GistRoot, data: InputStream) {
+
+    override fun getUrls(call: ApplicationCall, root: GistRoot): UrlList {
+        val main = call.url {
+            path(prefix,root.gist.id.value.encodeBase62(), root.name + ".png")
+        }
+        return UrlList(main, emptyList())
+    }
+
+    override fun getPreviewUrl(call:ApplicationCall, gist: Gist): String {
+        val main = call.url {
+            path(prefix,gist.id.value.encodeBase62(), "preview.png")
+        }
+        return main
+    }
+
+    override suspend fun storeRoot(root: GistRoot, input: InputStream) {
         val rootDirectory = File(directory, root.gist.id.toString())
         rootDirectory.mkdirs()
         val imageFile = File(rootDirectory, root.name + ".png")
@@ -55,15 +67,21 @@ class DirectoryBasedStorage(private val directory: File, private val prefix: Str
         }
 
         withContext(Dispatchers.IO) {
-            data.copyTo(imageFile.outputStream())
+            input.copyTo(imageFile.outputStream())
         }
     }
 
-    fun get(call: ApplicationCall, root: GistRoot): UrlList {
-        val main = call.url {
-            path(prefix,root.gist.id.value.encodeBase62(), root.name + ".png")
+    override suspend fun storePreview(gist: Gist, input: InputStream) {
+        val rootDirectory = File(directory, gist.id.toString())
+        rootDirectory.mkdirs()
+        val imageFile = File(rootDirectory,  "preview.png")
+        if(imageFile.exists()) {
+            return
         }
-        return UrlList(main, emptyList())
+
+        withContext(Dispatchers.IO) {
+            input.copyTo(imageFile.outputStream())
+        }
     }
 
 }

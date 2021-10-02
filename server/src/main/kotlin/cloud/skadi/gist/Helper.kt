@@ -36,6 +36,11 @@ fun UUID.encodeBase62() = base62.encode(
 
 fun String.decodeBase64() = Base64.getMimeDecoder().decode(this)!!
 
+/**
+ * Enforces the user to be authenticated, if no user is loggin the user is first send to login.
+ *
+ * The loged in user then passed to the consumer. Authentication via cookie or header is supported.
+ */
 suspend fun ApplicationCall.authenticated(body: suspend (User) -> Unit) {
     val token = this.request.header(HEADER_SKADI_TOKEN)
 
@@ -43,7 +48,7 @@ suspend fun ApplicationCall.authenticated(body: suspend (User) -> Unit) {
         userByToken(token)
     else gistSession?.user()
 
-    if(gistSession != null){
+    if(gistSession != null && user == null){
         this.application.log.error("Valid session but user (${gistSession?.email}) not found!")
     }
 
@@ -54,8 +59,12 @@ suspend fun ApplicationCall.authenticated(body: suspend (User) -> Unit) {
     body(user)
 }
 
+/**
+ *  Will retrieve the user that is currently logged in and pass it to the consumer.
+ *
+ *  Of no user is logged in the user is null.
+ */
 suspend fun ApplicationCall.optionallyAthenticated(body: suspend (User?) -> Unit) {
-
     val token = this.request.header(HEADER_SKADI_TOKEN)
 
     val user = if (token != null)
