@@ -21,12 +21,20 @@ import io.ktor.request.*
 import io.ktor.response.*
 import io.ktor.routing.*
 import io.ktor.util.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import kotlinx.html.h2
 import kotlinx.html.p
 import kotlinx.html.unsafe
 import org.jetbrains.exposed.sql.SizedCollection
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
+import java.awt.image.BufferedImage
+import java.io.BufferedOutputStream
+import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
 import java.time.LocalDateTime
+import javax.imageio.IIOImage
+import javax.imageio.ImageIO
 
 @ExperimentalStdlibApi
 fun Application.configureGistRoutes(
@@ -86,6 +94,24 @@ fun Application.configureGistRoutes(
                 gistAndRoots.second.forEach {
                     storage.storeRoot(it.first, it.second)
                 }
+                val firstRoot = gistAndRoots.second.firstOrNull() ?: return@newSuspendedTransaction
+                val image = withContext(Dispatchers.IO) {
+                    val inputStream = firstRoot.second
+                    inputStream.reset()
+                    ImageIO.read(inputStream)
+                }
+                val cropped = if(image.height > 250) {
+                    image.getSubimage(0, 0, image.width, 250)
+                } else {
+                    image
+                }
+
+                val output = withContext(Dispatchers.IO) {
+                    val outputStream = ByteArrayOutputStream()
+                    ImageIO.write(cropped, "png", outputStream)
+                    outputStream.toByteArray()
+                }
+                storage.storePreview(gistAndRoots.first, ByteArrayInputStream(output))
             }
 
             val encodedId = gistAndRoots.first.id.value.encodeBase62()

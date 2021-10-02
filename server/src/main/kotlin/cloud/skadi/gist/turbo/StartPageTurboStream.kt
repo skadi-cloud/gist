@@ -19,7 +19,7 @@ sealed class GistUpdate(val gist: Gist) {
 
 class StartPageTurboStream(
     private val user: User?,
-    private val urlGetter: (GistRoot) -> UrlList,
+    private val urlGetter: (Gist) -> String,
     private val session: DefaultWebSocketServerSession
 ) :
     WebsocketTurboChannel<GistUpdate>(session.outgoing, LoggerFactory.getLogger(StartPageTurboStream::class.java)) {

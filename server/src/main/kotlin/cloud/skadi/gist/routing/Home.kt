@@ -25,7 +25,7 @@ fun Application.configureHomeRouting(tsm: TurboStreamMananger, store: StoragePro
                     call.respondHtmlTemplate(RootTemplate("Home", user)) {
                         content {
                             allPublicGists().notForUpdate().forEach { gist ->
-                                gistSummary(gist, { store.getUrls(call, it) }, { call.url(it) }, user)
+                                gistSummary(gist, { store.getPreviewUrl(call, it) }, { call.url(it) }, user)
                             }
                         }
                         menu {
@@ -48,7 +48,7 @@ fun Application.configureHomeRouting(tsm: TurboStreamMananger, store: StoragePro
         }
         webSocket("/") {
             call.optionallyAthenticated { user ->
-                tsm.runWebSocket(this, StartPageTurboStream(user, { store.getUrls(call, it) }, this))
+                tsm.runWebSocket(this, StartPageTurboStream(user, { store.getPreviewUrl(call, it) }, this))
             }
         }
     }

@@ -88,7 +88,7 @@ fun FlowContent.gistMetadata(gist: Gist, user: User?) {
 
 fun FlowContent.gistSummary(
     gist: Gist,
-    getScreenShotUrl: (GistRoot) -> UrlList,
+    getPreviewUrl: (Gist) -> String,
     getUrl: (Gist) -> String,
     user: User?
 ) = div(classes = "gist snippet") {
@@ -103,5 +103,14 @@ fun FlowContent.gistSummary(
     p(classes = "summary") {
         unsafe { +markdownToHtml(gist.description?.take(1024) ?: "") }
     }
-    gistRoot(getScreenShotUrl, gist.roots.first())
+    val root = gist.roots.first()
+
+    div(CSSClasses.GistRoot.className) {
+        h3(classes = "name") {
+            root.name
+        }
+        img(classes = "rendered") {
+            src = getPreviewUrl(gist)
+        }
+    }
 }
