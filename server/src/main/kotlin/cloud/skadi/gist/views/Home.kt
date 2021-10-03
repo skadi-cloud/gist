@@ -83,6 +83,7 @@ fun FlowContent.gistMetadata(gist: Gist, user: User?) {
     div("facts") {
         ul {
             li(classes = "roots") {
+                i(classes = "far fa-file-code") {  }
                 +"${gist.roots.count()} roots"
             }
             /*
@@ -114,8 +115,12 @@ fun FlowContent.gistSummary(
             //editControlls(gist)
         }
     }
-    p(classes = "summary") {
-        unsafe { +markdownToHtml(gist.description?.take(1024) ?: "") }
+    div(classes = "summary") {
+        if(!gist.description.isNullOrBlank()) {
+            unsafe { +markdownToHtml(gist.description?.take(1024) ?: "") }
+        } else {
+            p{+""}
+        }
     }
     val root = gist.roots.first()
 
@@ -123,8 +128,11 @@ fun FlowContent.gistSummary(
         h3(classes = "name") {
             root.name
         }
-        img(classes = "rendered") {
-            src = getPreviewUrl(gist)
+        a {
+            href = getUrl(gist)
+            img(classes = "rendered") {
+                src = getPreviewUrl(gist)
+            }
         }
     }
 }

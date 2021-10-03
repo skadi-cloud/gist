@@ -13,6 +13,9 @@ fun Application.configureRouting() {
 
     routing {
         static("assets") {
+            static("font-awesome") {
+                resources("font-awesome")
+            }
             static("webfonts") {
                 resources("webfonts")
             }
