@@ -13,3 +13,4 @@
 /js/dist/script.js
 /js/dist/script.js.map
 js/.gradle/
+/server/src/main/resources/static/script.js

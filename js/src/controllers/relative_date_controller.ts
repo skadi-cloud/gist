@@ -1,17 +1,24 @@
 import {Controller} from "@hotwired/stimulus"
+import {FormatString} from "../String";
 
 export default class extends Controller {
-    declare readonly dateTargets: HTMLElement[];
-    static targets = ["date"]
+    declare readonly itemTarget: HTMLElement;
+    static targets = ["item"]
     private timeout: NodeJS.Timeout;
 
-    connect() {
-        let elements = this.dateTargets
+    declare readonly dateValue: string;
+    declare readonly formatValue?: string;
+    static values = {
+        date: String,
+        format: String
+    };
 
+    connect() {
+        let element = this.itemTarget
+        let dateAttr = this.dateValue
+        let template = this.formatValue
         let updater = function () {
-            elements.forEach(function (element) {
-                let dateAttr = element.attributes.getNamedItem("data-date")?.value
-                let diff = new Date().getTime() - new Date(Number.parseInt(dateAttr!!) + new Date().getTimezoneOffset() * 60000).getTime()
+                let diff = new Date().getTime() - new Date(Number.parseInt(dateAttr) + new Date().getTimezoneOffset() * 60000).getTime()
                 let diffStr
                 if (diff > 86400000) {
                     diffStr = Math.floor(diff / 86400000) + " days"
@@ -22,10 +29,12 @@ export default class extends Controller {
                 } else {
                     diffStr = Math.floor(diff / 1000) + " seconds"
                 }
-                element.innerText = diffStr + " ago"
-            })
-
-        }
+                if(template != null) {
+                    element.innerText = FormatString(template, diffStr + " ago")
+                } else {
+                    element.innerText = diffStr + " ago"
+                }
+            }
         this.timeout = setInterval(updater, 10000);
         updater()
     }

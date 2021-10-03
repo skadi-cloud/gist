@@ -8,6 +8,8 @@ import cloud.skadi.gist.encodeBase62
 import cloud.skadi.gist.markdownToHtml
 import cloud.skadi.gist.storage.UrlList
 import kotlinx.html.*
+import java.time.ZoneOffset
+import java.time.format.DateTimeFormatter
 
 fun Gist.mainDivId() = "gist-${this.id.value.encodeBase62()}"
 const val HTML_ID_GIST_CONTAINER = "gists"
@@ -38,31 +40,42 @@ fun FlowContent.likeable(gist: Gist, user: User) = div {
     }
 }
 
-const val DEFAULT_USER_IMAGE = ""
+const val DEFAULT_USER_IMAGE = "/assets/annon.jpg"
 fun FlowContent.userDetailsAndName(gist: Gist, getUrl: (Gist) -> String) {
     val user = gist.user
     div("name-and-user") {
         img {
             src = user?.avatarUrl ?: DEFAULT_USER_IMAGE
         }
-        span {
-            if (user != null) {
+        div("profile-date") {
+            span {
+                if (user != null) {
+                    a {
+                        href = "/user/${user.login}"
+                        +user.login
+                    }
+                } else {
+                    p {
+                        +"Annonymous"
+                    }
+                }
+                +"/"
                 a {
-                    href = "/user/${user.login}"
-                    +user.login
+                    href = getUrl(gist)
+                    +gist.name.ifEmpty { "No name" }
                 }
-            } else {
-                p {
-                    +"Annonymous"
-                }
-            }
-            +"/"
-            a {
-                href = getUrl(gist)
-                +gist.name.ifEmpty { "No name" }
-            }
 
+            }
+            span {
+                val formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy")
+                attributes["data-relative-date-date-value"] = "${gist.created.toEpochSecond(ZoneOffset.UTC) * 1000}"
+                attributes["data-relative-date-format-value"] = "Created {0}"
+                attributes["data-controller"] = "relative-date"
+                attributes["data-relative-date-target"] = "item"
+                +"Created ${gist.created}"
+            }
         }
+
     }
 }
 
@@ -95,6 +108,7 @@ fun FlowContent.gistSummary(
     id = gist.mainDivId()
     div("meta") {
         userDetailsAndName(gist, getUrl)
+
         gistMetadata(gist, user)
         if (gist.isEditableBy(user)) {
             //editControlls(gist)

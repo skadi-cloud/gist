@@ -61,6 +61,9 @@ class RootTemplate(private val pageName: String, private val user: User? = null)
             title { +pageName }
             styleLink("/assets/styles/styles.css")
             favicons()
+            script {
+                src = "/assets/script.js"
+            }
         }
         body {
             div() {

@@ -2,7 +2,7 @@
 
 body {
     font-family: Raleway, sans-serif;
-    font-size: 16px;
+    font-size: 14px;
     text-align: left;
     margin: 0;
 }
@@ -29,13 +29,11 @@ a, a:visited {
     color: var(--main-color);
 }
 
-.root {
-    text-align: center;
-}
+
 #header {
     background: var(--main-color);
     display: flex;
-    height: 124px;
+    height: 84px;
 }
 #branding {
     display: flex;
@@ -59,7 +57,7 @@ a, a:visited {
 }
 
 #header-image {
-    height: 64px;
+    height: 42px;
     display: block;
 }
 
@@ -67,18 +65,51 @@ img.rendered {
     max-width: 100%;
 }
 
+div.meta {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
+.name-and-user p {
+    display: inline-block;
+    margin: 0;
+}
+
+.facts li {
+    display: inline-block;
+}
+.name-and-user {
+    display: flex;
+}
+.name-and-user img {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+}
+.name-and-user .profile-date {
+    display: flex;
+    flex-direction: column;
+    margin-left: 12px;
+}
+
 .gist.snippet img.rendered {
-    width: 100%;
     max-width: 100%;
-    object-fit: cover;
     max-height: 200px;
-    object-position: top;
+}
+
+.gist.snippet .root {
+    border: 1px solid var(--main-color);
+    border-radius: 6px;
+}
+
+.gist.snippet {
+    margin-bottom: 2em;
 }
 
 @media (min-width: 768px) {
     .container {
         width: 90%;
-        margin: 0 auto;
+        margin: 32px auto;
     }
 }
 
@@ -89,10 +120,6 @@ img.rendered {
 @media (min-width: 1200px) {
     .container {
         width: 960px;
-        margin: 0 auto;
-    }
-
-    body {
-        font-size: 18px;
+        margin: 32px auto;
     }
 }
