@@ -1,16 +1,19 @@
 package cloud.skadi.gist.routing
 
 import cloud.skadi.gist.*
-import cloud.skadi.gist.data.*
-import cloud.skadi.gist.plugins.gistSession
+import cloud.skadi.gist.data.Gist
+import cloud.skadi.gist.data.GistRoot
+import cloud.skadi.gist.data.userByToken
 import cloud.skadi.gist.shared.*
-import cloud.skadi.gist.storage.DirectoryBasedStorage
 import cloud.skadi.gist.storage.StorageProvider
-import cloud.skadi.gist.turbo.*
-import cloud.skadi.gist.views.*
+import cloud.skadi.gist.turbo.GistUpdate
+import cloud.skadi.gist.turbo.TurboStreamMananger
+import cloud.skadi.gist.views.CSSClasses
+import cloud.skadi.gist.views.RootTemplate
+import cloud.skadi.gist.views.gistRoot
+import cloud.skadi.gist.views.userDetailsAndName
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.vladsch.flexmark.parser.ParserEmulationProfile
 import io.ktor.application.*
 import io.ktor.html.*
 import io.ktor.http.*
@@ -20,18 +23,12 @@ import io.ktor.routing.*
 import io.ktor.util.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import kotlinx.html.div
-import kotlinx.html.h2
-import kotlinx.html.p
-import kotlinx.html.unsafe
+import kotlinx.html.*
 import org.jetbrains.exposed.sql.SizedCollection
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
-import java.awt.image.BufferedImage
-import java.io.BufferedOutputStream
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.time.LocalDateTime
-import javax.imageio.IIOImage
 import javax.imageio.ImageIO
 
 @ExperimentalStdlibApi
@@ -98,7 +95,7 @@ fun Application.configureGistRoutes(
                     inputStream.reset()
                     ImageIO.read(inputStream)
                 }
-                val cropped = if(image.height > 250) {
+                val cropped = if (image.height > 250) {
                     image.getSubimage(0, 0, image.width, 250)
                 } else {
                     image
@@ -127,7 +124,44 @@ fun Application.configureGistRoutes(
                 newSuspendedTransaction {
                     call.respondHtmlTemplate(RootTemplate("Skadi Gist", user = user)) {
                         aboveContainer {
-                                userDetailsAndName(gist) { call.url(it) }
+                            userDetailsAndName(gist) { call.url(it) }
+                            noScript {
+                                p {
+                                    +("Seems like you have JavaScript disabled. We won't be able to import the Gist into MPS for you. " +
+                                            "Please copy the URL of the Gist and use the Code -> Import Gist action in MPS.")
+                                }
+                            }
+                            form {
+                                id = "plugin-control"
+                                attributes["data-controller"] = "gist"
+                                attributes["data-gist-gist-id-value"] = gist.id.value.encodeBase62()
+
+                                div("hidden") {
+                                    attributes["data-gist-target"] = "failed"
+                                    id = "no-plugin"
+                                    button {
+                                        attributes["data-action"] = "click->gist#retry"
+                                        i("fas fa-redo-alt") {}
+                                    }
+                                    +"No Plugin"
+                                }
+
+                                div("hidden") {
+                                    attributes["data-gist-target"] = "detecting"
+                                    id = "detecting"
+                                    div("lds-dual-ring") {  }
+                                    +"Detecting"
+                                }
+                                div("hidden") {
+                                    id = "ready"
+                                    attributes["data-gist-target"] = "ready"
+                                    button {
+                                        attributes["data-action"] = "click->gist#doImport"
+                                        +"Import"
+                                    }
+                                }
+
+                            }
                         }
                         content {
                             div(classes = CSSClasses.GistDescription.className) {
@@ -163,7 +197,7 @@ fun Application.configureGistRoutes(
                         gist.likedBy = SizedCollection(gist.likedBy + user)
                     }
                 }
-                if(call.acceptsTurbo()) {
+                if (call.acceptsTurbo()) {
                     // nothing to do, client will get the update via TSM.
                     call.respond(HttpStatusCode.OK)
                 } else {

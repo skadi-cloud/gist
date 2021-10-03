@@ -63,6 +63,10 @@ class HttpHandler : HttpRequestHandler() {
         return when {
             request.method() == HttpMethod.GET && urlDecoder.path().endsWith("/login-response") ->
                 handleLogin(urlDecoder, request, context)
+            request.method() == HttpMethod.GET && urlDecoder.path().endsWith("/hello") -> {
+                respondText(request, context, true, "Hello")
+                true
+            }
             request.method() == HttpMethod.POST && urlDecoder.path().endsWith("/import-gist") ->
                 importGist(urlDecoder.parameters()["gist"]!!.first(), request, context)
             else -> false
@@ -106,21 +110,7 @@ class HttpHandler : HttpRequestHandler() {
             }
         }
 
-
-        val response = DefaultHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK)
-        response.headers().set(HttpHeaderNames.CONTENT_TYPE, ContentType.TEXT_HTML)
-        response.addCommonHeaders()
-        response.headers().set(HttpHeaderNames.CACHE_CONTROL, "private, must-revalidate") //NON-NLS
-        response.headers().set(HttpHeaderNames.LAST_MODIFIED, Date(Calendar.getInstance().timeInMillis))
-
-        val channel = context.channel()
-        channel.write(response)
-        val keepAlive = response.addKeepAliveIfNeeded(request)
-        val future = channel.writeAndFlush(LastHttpContent.EMPTY_LAST_CONTENT)
-        if (!keepAlive) {
-            future.addListener(ChannelFutureListener.CLOSE)
-        }
-
+        respondText(request, context, true, "Ok")
         return true
     }
 
@@ -170,11 +160,11 @@ class HttpHandler : HttpRequestHandler() {
         try {
             val token = runBlocking {
                 val response = client.submitForm<HttpResponse>(url = "${settings.backendAddress}ide/redeem-token",
-                 formParameters = Parameters.build {
-                     append(PARAMETER_DEVICE_TOKEN, temporaryToken)
-                     append(PARAMETER_USER_NAME, user)
-                     append(PARAMETER_DEVICE_NAME, InetAddress.getLocalHost().hostName)
-                 })
+                    formParameters = Parameters.build {
+                        append(PARAMETER_DEVICE_TOKEN, temporaryToken)
+                        append(PARAMETER_USER_NAME, user)
+                        append(PARAMETER_DEVICE_NAME, InetAddress.getLocalHost().hostName)
+                    })
                 response.readText()
             }
 
@@ -210,6 +200,43 @@ class HttpHandler : HttpRequestHandler() {
             }
         }
         return true
+    }
+
+    private fun respondText(
+        request: FullHttpRequest,
+        context: ChannelHandlerContext,
+        success: Boolean = false,
+        text: String
+    ) {
+        val response = DefaultHttpResponse(
+            HttpVersion.HTTP_1_1,
+            if (success) HttpResponseStatus.OK else HttpResponseStatus.BAD_REQUEST
+        )
+        response.headers().set(HttpHeaderNames.CONTENT_TYPE, ContentType.TEXT_PLAIN)
+        response.addCommonHeaders()
+        response.headers().set(HttpHeaderNames.CACHE_CONTROL, "private, must-revalidate") //NON-NLS
+        response.headers().set(HttpHeaderNames.LAST_MODIFIED, Date(Calendar.getInstance().timeInMillis))
+
+        val bytes = text.toByteArray()
+
+        if (request.method() != HttpMethod.HEAD) {
+            HttpUtil.setContentLength(response, bytes.size.toLong())
+        }
+
+        val channel = context.channel()
+        channel.write(response)
+
+        if (request.method() != HttpMethod.HEAD) {
+            val stream = ByteArrayInputStream(bytes)
+            channel.write(ChunkedStream(stream))
+            stream.close()
+        }
+        val keepAlive = response.addKeepAliveIfNeeded(request)
+
+        val future = channel.writeAndFlush(LastHttpContent.EMPTY_LAST_CONTENT)
+        if (!keepAlive) {
+            future.addListener(ChannelFutureListener.CLOSE)
+        }
     }
 
     private fun respond(
