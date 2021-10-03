@@ -40,6 +40,7 @@ object TokenTable: IntIdTable() {
     val lastUsed = datetime("last-used").nullable()
     val name = varchar("name", 256)
     val user = reference("user", UserTable)
+    val isTemporary = bool("is-temporary").default(true)
 }
 
 class Token(id: EntityID<Int>): IntEntity(id) {
@@ -49,6 +50,7 @@ class Token(id: EntityID<Int>): IntEntity(id) {
     var created by TokenTable.created
     var lastUsed by TokenTable.lastUsed
     var name by TokenTable.name
+    var isTemporary by TokenTable.isTemporary
 }
 
 object GistTable: UUIDTable() {

@@ -2,12 +2,8 @@ package cloud.skadi.gist.mps.plugin.http
 
 import cloud.skadi.gist.mps.plugin.config.SkadiGistSettings
 import cloud.skadi.gist.mps.plugin.getLoginUrl
-import cloud.skadi.gist.mps.plugin.importInto
 import cloud.skadi.gist.mps.plugin.toSNode
-import cloud.skadi.gist.shared.ImportGistMessage
-import cloud.skadi.gist.shared.PARAMETER_CSRF_TOKEN
-import cloud.skadi.gist.shared.PARAMETER_DEVICE_TOKEN
-import cloud.skadi.gist.shared.PARAMETER_USER_NAME
+import cloud.skadi.gist.shared.*
 import com.fasterxml.jackson.databind.json.JsonMapper
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.fasterxml.jackson.module.kotlin.readValue
@@ -20,15 +16,18 @@ import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.project.ex.ProjectManagerEx
 import io.ktor.client.engine.java.*
 import io.ktor.client.request.*
+import io.ktor.client.request.forms.*
+import io.ktor.client.statement.*
 import io.ktor.client.statement.HttpResponse
+import io.ktor.http.*
 import io.ktor.utils.io.jvm.javaio.*
 import io.netty.channel.ChannelFutureListener
 import io.netty.channel.ChannelHandlerContext
 import io.netty.handler.codec.http.*
 import io.netty.handler.codec.http.DefaultHttpResponse
+import io.netty.handler.codec.http.HttpMethod
 import io.netty.handler.stream.ChunkedStream
 import jetbrains.mps.ide.datatransfer.CopyPasteUtil
-import jetbrains.mps.smodel.GlobalModelAccess
 import jetbrains.mps.smodel.ModelAccess
 import kotlinx.coroutines.runBlocking
 import kotlinx.html.*
@@ -38,6 +37,7 @@ import org.jetbrains.ide.HttpRequestHandler
 import org.jetbrains.io.addCommonHeaders
 import org.jetbrains.io.addKeepAliveIfNeeded
 import java.io.ByteArrayInputStream
+import java.net.InetAddress
 import java.net.URL
 import java.util.*
 
@@ -130,8 +130,8 @@ class HttpHandler : HttpRequestHandler() {
         context: ChannelHandlerContext
     ): Boolean {
         val parameters = urlDecoder.parameters()
-        val token =
-            parameters[PARAMETER_DEVICE_TOKEN]?.firstOrNull() ?: return respondWithError(
+        val temporaryToken =
+            parameters[PARAMETER_TEMPORARY_TOKEN]?.firstOrNull() ?: return respondWithError(
                 "missing token",
                 request,
                 context
@@ -167,8 +167,22 @@ class HttpHandler : HttpRequestHandler() {
             return respondWithError("Already logged in.", request, context)
         }
 
-        settings.loggedInUser = user
-        settings.deviceToken = token
+        try {
+            val token = runBlocking {
+                val response = client.submitForm<HttpResponse>(url = "${settings.backendAddress}ide/redeem-token",
+                 formParameters = Parameters.build {
+                     append(PARAMETER_DEVICE_TOKEN, temporaryToken)
+                     append(PARAMETER_USER_NAME, user)
+                     append(PARAMETER_DEVICE_NAME, InetAddress.getLocalHost().hostName)
+                 })
+                response.readText()
+            }
+
+            settings.loggedInUser = user
+            settings.deviceToken = token
+        } catch (e: Exception) {
+            return respondWithError("Error redeeming token: ${e.message}", request, context)
+        }
 
         respond(request, context, success = true) {
             head { title = "Skadi Cloud Gist" }

@@ -2,11 +2,11 @@ package cloud.skadi.gist.routing
 
 import cloud.skadi.gist.authenticated
 import cloud.skadi.gist.data.Token
-import cloud.skadi.gist.data.user
-import cloud.skadi.gist.plugins.gistSession
+import cloud.skadi.gist.data.getTemporaryToken
 import cloud.skadi.gist.shared.*
 import io.ktor.application.*
 import io.ktor.http.*
+import io.ktor.request.*
 import io.ktor.response.*
 import io.ktor.routing.*
 import io.ktor.util.*
@@ -45,15 +45,49 @@ fun Application.configureIdeRoutes() {
                             this.user = user
                             created = LocalDateTime.now()
                             token = generateNonce()
+                            isTemporary = true
                         }
                         call.respondRedirect { takeFrom(callback)
                             parameters[PARAMETER_CSRF_TOKEN] = csrfToken
-                            parameters[PARAMETER_DEVICE_TOKEN] = token.token
+                            parameters[PARAMETER_TEMPORARY_TOKEN] = token.token
                             parameters[PARAMETER_USER_NAME] = user.login }
                     }
 
                 }
+            }
+            post("redeem-token") {
+                val parameters = call.receiveParameters()
+                val deviceName = parameters[PARAMETER_DEVICE_NAME]
+                val temporaryToken = parameters[PARAMETER_TEMPORARY_TOKEN]
 
+                if(deviceName == null) {
+                    call.respond(HttpStatusCode.BadRequest)
+                    return@post
+                }
+
+                if(temporaryToken == null) {
+                    call.respond(HttpStatusCode.NotFound)
+                    return@post
+                }
+
+                val dbToken = getTemporaryToken(temporaryToken)
+
+                if(dbToken == null || dbToken.name != deviceName) {
+                    call.respond(HttpStatusCode.BadRequest)
+                    return@post
+                }
+
+                newSuspendedTransaction {
+                    val token = Token.new {
+                        name = deviceName
+                        this.user = dbToken.user
+                        created = LocalDateTime.now()
+                        token = generateNonce()
+                        isTemporary = false
+                    }
+                    dbToken.lastUsed = LocalDateTime.now()
+                    call.respondText(token.token)
+                }
             }
         }
     }
