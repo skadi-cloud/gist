@@ -50,6 +50,7 @@ fun HEAD.favicons() {
 
 class RootTemplate(private val pageName: String, private val user: User? = null) : Template<HTML> {
     val content = Placeholder<HtmlBlockTag>()
+    val aboveContainer = Placeholder<HtmlBlockTag>()
     val menu = Placeholder<HtmlBlockTag>()
     override fun HTML.apply() {
 
@@ -85,6 +86,10 @@ class RootTemplate(private val pageName: String, private val user: User? = null)
                     insert(menu)
                 }
             }
+            div("above") {
+                insert(aboveContainer)
+            }
+
             div(classes = "container") {
                 insert(content)
             }

@@ -32,9 +32,10 @@ fun FlowContent.gistRoot(
     root: GistRoot
 ) {
     div(CSSClasses.GistRoot.className) {
-        h3(classes = "name") {
-            root.name
+        div(classes = "name") {
+            b {+root.name}
         }
+
         img(classes = "rendered") {
             src = url(root).mainUrl
         }

@@ -7,10 +7,7 @@ import cloud.skadi.gist.shared.*
 import cloud.skadi.gist.storage.DirectoryBasedStorage
 import cloud.skadi.gist.storage.StorageProvider
 import cloud.skadi.gist.turbo.*
-import cloud.skadi.gist.views.CSSClasses
-import cloud.skadi.gist.views.RootTemplate
-import cloud.skadi.gist.views.gistRoot
-import cloud.skadi.gist.views.mainDivId
+import cloud.skadi.gist.views.*
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.vladsch.flexmark.parser.ParserEmulationProfile
@@ -23,6 +20,7 @@ import io.ktor.routing.*
 import io.ktor.util.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.html.div
 import kotlinx.html.h2
 import kotlinx.html.p
 import kotlinx.html.unsafe
@@ -128,11 +126,11 @@ fun Application.configureGistRoutes(
             call.withUserReadableGist { gist, user ->
                 newSuspendedTransaction {
                     call.respondHtmlTemplate(RootTemplate("Skadi Gist", user = user)) {
+                        aboveContainer {
+                                userDetailsAndName(gist) { call.url(it) }
+                        }
                         content {
-                            h2(classes = CSSClasses.GistName.className) {
-                                +gist.name
-                            }
-                            p(classes = CSSClasses.GistDescription.className) {
+                            div(classes = CSSClasses.GistDescription.className) {
                                 unsafe { +markdownToHtml(gist.description ?: "") }
                             }
                             gist.roots.notForUpdate().forEach { root ->
