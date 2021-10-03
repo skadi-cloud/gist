@@ -71,7 +71,7 @@ suspend fun ApplicationCall.optionallyAthenticated(body: suspend (User?) -> Unit
         userByToken(token)
     else gistSession?.user()
 
-    if(gistSession != null){
+    if(gistSession != null && user == null){
         this.application.log.error("Valid session but user (${gistSession?.email}) not found!")
     }
     body(user)
