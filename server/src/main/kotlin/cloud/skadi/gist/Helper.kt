@@ -15,7 +15,9 @@ import io.ktor.util.*
 import io.seruco.encoding.base62.Base62
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import java.nio.ByteBuffer
+import java.security.MessageDigest
 import java.util.*
+
 
 private val base62 = Base62.createInstance()!!
 private val mapper = JsonMapper.builder()
@@ -120,3 +122,8 @@ fun ApplicationCall.url(gist: Gist) =
     this.url {
         path("gist", gist.id.value.encodeBase62())
     }
+
+fun String.sha256() : ByteArray {
+    val digest = MessageDigest.getInstance("SHA-256")
+    return digest.digest(this.toByteArray())
+}

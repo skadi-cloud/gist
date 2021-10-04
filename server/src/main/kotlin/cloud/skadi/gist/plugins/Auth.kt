@@ -3,6 +3,7 @@ package cloud.skadi.gist.plugins
 import cloud.skadi.gist.data.User
 import cloud.skadi.gist.data.userByEmail
 import cloud.skadi.gist.getEnvOrDefault
+import cloud.skadi.gist.sha256
 import io.ktor.application.*
 import io.ktor.auth.*
 import io.ktor.client.*
@@ -100,7 +101,7 @@ fun Application.configureOAuth() {
     }
     install(Sessions) {
         cookie<GistSession>("GistSession") {
-            val salt = hex(COOKIE_SALT)
+            val salt = COOKIE_SALT.sha256()
             transform(SessionTransportTransformerMessageAuthentication(salt))
             cookie.extensions["SameSite"] = "lax"
         }
