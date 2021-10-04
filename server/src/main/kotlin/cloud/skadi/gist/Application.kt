@@ -27,6 +27,9 @@ import java.net.URI
 
 private val logger = LoggerFactory.getLogger("dbInfrastructure")
 
+const val INTERNAL_API_PORT = 9090
+
+
 val SQL_PASSWORD = getEnvOfFail("SQL_PASSWORD")
 val SQL_USER = getEnvOfFail("SQL_USER")
 val SQL_DB = getEnvOfFail("SQL_DB")
@@ -89,13 +92,17 @@ fun main() {
             port = 8080
             host = "0.0.0.0"
         }
+        connector {
+            host = "0.0.0.0"
+            port = INTERNAL_API_PORT
+        }
+
         developmentMode = true
         module {
             configureRouting()
+            configureMetrics()
             configureOAuth()
             configureHTTP()
-            configureMonitoring()
-            configureTemplating()
             configureSockets()
             configureGistRoutes(tsm, storage)
             configureIdeRoutes()
