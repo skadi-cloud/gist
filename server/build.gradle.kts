@@ -12,7 +12,7 @@ val targetJvm: String by project
 
 
 application {
-    mainClass.set("cloud.skadi.ApplicationKt")
+    mainClass.set("cloud.skadi.gist.ApplicationKt")
 }
 
 repositories {
