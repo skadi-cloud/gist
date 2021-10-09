@@ -14,3 +14,4 @@ data class GistCreationRequest(
 )
 
 data class ImportGistMessage(val name: String, val roots: List<AST>)
+data class GistMetadata(val name: String, val roots: Int, val description: String?, val visibility: GistVisibility)

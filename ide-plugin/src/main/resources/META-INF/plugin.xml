@@ -41,5 +41,8 @@
             and the actions aren't there so adding them will fail. -->
             <!--<add-to-group group-id="jetbrains.mps.ide.actions.FlyingActions_ActionGroup" />-->
         </action>
+        <action class="cloud.skadi.gist.mps.plugin.PastGistAction" text="Import Gist">
+            <add-to-group group-id="CodeMenu" anchor="last" />
+        </action>
     </actions>
 </idea-plugin>

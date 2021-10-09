@@ -67,10 +67,40 @@ class HttpHandler : HttpRequestHandler() {
                 respondText(request, context, true, "Hello")
                 true
             }
+            request.method() == HttpMethod.GET && urlDecoder.path().endsWith("/import-gist") ->
+                confirmImportGist(urlDecoder.parameters()["gist"]!!.first(), request, context)
             request.method() == HttpMethod.POST && urlDecoder.path().endsWith("/import-gist") ->
                 importGist(urlDecoder.parameters()["gist"]!!.first(), request, context)
             else -> false
         }
+    }
+
+    private fun confirmImportGist(gist: String, request: FullHttpRequest, context: ChannelHandlerContext): Boolean {
+        val settings = SkadiGistSettings.getInstance()
+
+        val toImport =
+            runBlocking {
+                val response = client.get<HttpResponse>(URL("${settings.backendAddress}/gist/$gist/metadata")) {
+                    accept(io.ktor.http.ContentType.Application.Json)
+                }
+                mapper.readValue<GistMetadata>(response.content.toInputStream())
+            }
+        respond(request, context, true) {
+            head {
+                title = "Import gist ${toImport.name}"
+            }
+            body {
+                div {
+                    form {
+                        method = FormMethod.post
+                        submitInput {
+                            +"Import gist ${toImport.name}"
+                        }
+                    }
+                }
+            }
+        }
+        return true
     }
 
     private fun importGist(gist: String, request: FullHttpRequest, context: ChannelHandlerContext): Boolean {

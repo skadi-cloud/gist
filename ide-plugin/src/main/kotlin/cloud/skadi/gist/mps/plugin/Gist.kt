@@ -67,7 +67,8 @@ suspend fun upload(
     visibility: GistVisibility,
     nodes: List<SNode>,
     repository: SRepository,
-    token: String?
+    token: String?,
+    settings: SkadiGistSettings
 ): String? {
     val gistCreationRequest = GistCreationRequest(
         name = name,
@@ -87,7 +88,7 @@ suspend fun upload(
                 isRoot = isRoot
             )
         })
-    val response = client.post<HttpResponse>(HOST) {
+    val response = client.post<HttpResponse>("${settings.backendAddress}gist/create") {
         if (token != null)
             header(HEADER_SKADI_TOKEN, token)
         expectSuccess = false
