@@ -26,6 +26,9 @@ fun Application.configureHTTP() {
     }
     install(ForwardedHeaderSupport) // WARNING: for security, do not include this if not behind a reverse proxy
     install(XForwardedHeaderSupport) {
+        // Treafik, the ingress used for the production deployment uses HttpHeaders.XForwardedServer to send the infromation
+        // about the container it is forwarding for. This header is last in the list of host headers and will override
+        // the correct information stored in XForwardedHost.
         this.hostHeaders.clear()
         this.hostHeaders.add(HttpHeaders.XForwardedHost)
     }
