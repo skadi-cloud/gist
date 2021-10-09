@@ -38,7 +38,6 @@ import java.util.*
 val client = io.ktor.client.HttpClient(Java) {
     followRedirects = false
 }
-const val HOST = "http://localhost:8080/gist/create"
 
 private val mapper = JsonMapper.builder()
     .addModule(KotlinModule())
