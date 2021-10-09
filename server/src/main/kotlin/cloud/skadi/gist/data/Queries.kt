@@ -13,6 +13,11 @@ fun allPublicGists(page: Int = 0) =
         .orderBy(GistTable.created to SortOrder.DESC)
         .limit(25, (25 * page).toLong())
 
+fun allPublicGists(user: User, page: Int = 0) =
+    Gist.find { (GistTable.visibility eq GistVisibility.Public) and (GistTable.user eq user.id) }
+        .orderBy(GistTable.created to SortOrder.DESC)
+        .limit(25, (25 * page).toLong())
+
 fun allGistsIncludingUser(user: User, page: Int = 0) =
     Gist.find { (GistTable.visibility eq GistVisibility.Public) or (GistTable.user eq user.id) }
         .orderBy(GistTable.created to SortOrder.DESC)
@@ -29,6 +34,10 @@ suspend fun userByToken(token: String, updateLastUsed: Boolean = true) =
             dbToken?.lastUsed = LocalDateTime.now()
         dbToken?.user
     }
+
+suspend fun getUserByLogin(login: String) = newSuspendedTransaction {
+    User.find { UserTable.login eq login }.firstOrNull()
+}
 
 suspend fun getTemporaryToken(token: String) = newSuspendedTransaction {
     val dbToken = Token.find { TokenTable.token eq token and (TokenTable.isTemporary eq true) and (TokenTable.lastUsed.isNull())}.firstOrNull()

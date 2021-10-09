@@ -107,7 +107,7 @@ fun main() {
             configureGistRoutes(tsm, storage)
             configureIdeRoutes()
             configureHomeRouting(tsm, storage)
-            configureUserRouting()
+            configureUserRouting(storage)
             if(STORAGE_KIND == "directory") {
                 (storage as DirectoryBasedStorage).install(this)
             }
