@@ -8,10 +8,7 @@ import cloud.skadi.gist.shared.*
 import cloud.skadi.gist.storage.StorageProvider
 import cloud.skadi.gist.turbo.GistUpdate
 import cloud.skadi.gist.turbo.TurboStreamMananger
-import cloud.skadi.gist.views.CSSClasses
-import cloud.skadi.gist.views.RootTemplate
-import cloud.skadi.gist.views.gistRoot
-import cloud.skadi.gist.views.userDetailsAndName
+import cloud.skadi.gist.views.*
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import io.ktor.application.*
@@ -131,37 +128,23 @@ fun Application.configureGistRoutes(
                                             "Please copy the URL of the Gist and use the Code -> Import Gist action in MPS.")
                                 }
                             }
-                            form {
-                                id = "plugin-control"
-                                attributes["data-controller"] = "gist"
-                                attributes["data-gist-gist-id-value"] = gist.id.value.encodeBase62()
 
-                                div("hidden") {
-                                    attributes["data-gist-target"] = "failed"
-                                    id = "no-plugin"
-                                    button {
-                                        attributes["data-action"] = "click->gist#retry"
-                                        i("fas fa-redo-alt") {}
-                                    }
-                                    +"No Plugin"
+                            button {
+                                classes = classes + "tooltip"
+                                id = "copy-button"
+                                attributes["data-controller"] = "gist-copy"
+                                attributes["data-gist-copy-target"] = "button"
+                                attributes["data-gist-copy-copied-class"] = "copied"
+                                attributes["data-action"] = "click->gist-copy#doCopy"
+                                span {
+                                    attributes["data-gist-copy-target"] = "text"
+                                    +"Copy Link"
                                 }
-
-                                div("hidden") {
-                                    attributes["data-gist-target"] = "detecting"
-                                    id = "detecting"
-                                    div("lds-dual-ring") {  }
-                                    +"Detecting"
+                                withToolTip(ToolTipSide.Left) {
+                                    p { +"After copying the link you can import the gist via Code -> Import Gist in MPS" }
                                 }
-                                div("hidden") {
-                                    id = "ready"
-                                    attributes["data-gist-target"] = "ready"
-                                    button {
-                                        attributes["data-action"] = "click->gist#doImport"
-                                        +"Import"
-                                    }
-                                }
-
                             }
+
                         }
                         content {
                             div(classes = CSSClasses.GistDescription.className) {

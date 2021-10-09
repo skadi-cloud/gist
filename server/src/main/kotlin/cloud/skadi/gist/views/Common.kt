@@ -12,6 +12,20 @@ enum class CSSClasses(val className: String) {
     override fun toString() = className
 }
 
+enum class ToolTipSide {
+    Left, Right;
+    fun toClass() : String = when(this) {
+        Left -> "left"
+        Right -> "right"
+    }
+}
+
+fun FlowContent.withToolTip(side: ToolTipSide, block: DIV.() -> Unit) {
+    div(side.toClass()) {
+        block()
+    }
+}
+
 fun HEAD.favicons() {
     link {
         rel = "apple-touch-icon"

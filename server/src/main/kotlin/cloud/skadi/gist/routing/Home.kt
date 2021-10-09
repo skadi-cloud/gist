@@ -10,6 +10,7 @@ import cloud.skadi.gist.views.RootTemplate
 import cloud.skadi.gist.views.gistSummary
 import io.ktor.application.*
 import io.ktor.html.*
+import io.ktor.response.*
 import io.ktor.routing.*
 import io.ktor.util.*
 import io.ktor.websocket.*
@@ -50,6 +51,10 @@ fun Application.configureHomeRouting(tsm: TurboStreamMananger, store: StoragePro
             call.optionallyAthenticated { user ->
                 tsm.runWebSocket(this, StartPageTurboStream(user, { store.getPreviewUrl(call, it) }, this))
             }
+        }
+
+        get("/how-to") {
+            call.respondText("no yet there")
         }
     }
 
