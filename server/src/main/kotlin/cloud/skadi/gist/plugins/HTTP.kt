@@ -35,4 +35,5 @@ fun Application.configureHTTP() {
     install(ContentNegotiation) {
         jackson()
     }
+    install(DoubleReceive)
 }

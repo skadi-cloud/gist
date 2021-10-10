@@ -1,6 +1,7 @@
 package cloud.skadi.gist.routing
 
 import cloud.skadi.gist.authenticated
+import cloud.skadi.gist.data.Token
 import cloud.skadi.gist.data.allPublicGists
 import cloud.skadi.gist.data.getUserByLogin
 import cloud.skadi.gist.optionallyAthenticated
@@ -67,7 +68,7 @@ fun Application.configureUserRouting(store: StorageProvider) = routing {
                                             }
                                             td {
                                                 val lastUsed = it.lastUsed
-                                                if(lastUsed != null) {
+                                                if (lastUsed != null) {
                                                     withRelativeDate(lastUsed)
                                                     val formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy")
                                                     +formatter.format(lastUsed)
@@ -77,7 +78,7 @@ fun Application.configureUserRouting(store: StorageProvider) = routing {
                                             }
                                             td {
                                                 form {
-                                                    action = url { path("user", "settings", "token", "delete") }
+                                                    action = call.url { path("user", "settings", "token", "delete") }
                                                     method = FormMethod.post
                                                     hiddenInput {
                                                         name = "id"
@@ -93,11 +94,35 @@ fun Application.configureUserRouting(store: StorageProvider) = routing {
                                             }
                                         }
                                     }
-
                                 }
                             }
                         }
                     }
+                }
+            }
+        }
+    }
+    post("user/settings/token/delete") {
+        call.authenticated { user ->
+            if (!call.validateCSRFToken(user)) {
+                call.respond(HttpStatusCode.BadRequest)
+                return@authenticated
+            }
+            val parameters = call.receiveParameters()
+            val tokenId = parameters["id"]?.toLong()
+            if (tokenId == null) {
+                call.respond(HttpStatusCode.BadRequest)
+                return@authenticated
+            }
+            newSuspendedTransaction {
+                val token = Token.findById(tokenId)
+                if (token == null || (token.user == user)) {
+                    call.respond(HttpStatusCode.NotFound)
+                    return@newSuspendedTransaction
+                }
+                token.delete()
+                call.respondRedirect() {
+                    path("user", "settings")
                 }
             }
         }

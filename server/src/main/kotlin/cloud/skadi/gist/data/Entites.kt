@@ -34,7 +34,7 @@ class User(id: EntityID<Int>) : IntEntity(id) {
     val tokens by Token referrersOn TokenTable.user
 }
 
-object TokenTable: IntIdTable() {
+object TokenTable: LongIdTable() {
     val token = varchar("token", 256).uniqueIndex()
     val created = datetime("created")
     val lastUsed = datetime("last-used").nullable()
@@ -43,8 +43,8 @@ object TokenTable: IntIdTable() {
     val isTemporary = bool("is-temporary").default(true)
 }
 
-class Token(id: EntityID<Int>): IntEntity(id) {
-    companion object: IntEntityClass<Token>(TokenTable)
+class Token(id: EntityID<Long>): LongEntity(id) {
+    companion object: LongEntityClass<Token>(TokenTable)
     var token by TokenTable.token
     var user by User referencedOn TokenTable.user
     var created by TokenTable.created
