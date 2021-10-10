@@ -53,7 +53,7 @@ fun Application.configureHomeRouting(tsm: TurboStreamMananger, store: StoragePro
         }
 
         get("/how-to") {
-            call.respondText("no yet there")
+            call.respondRedirect("https://github.com/skadi-cloud/gist/blob/main/docs/how-to.md", true)
         }
     }
 
