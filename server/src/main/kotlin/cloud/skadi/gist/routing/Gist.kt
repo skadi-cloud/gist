@@ -42,8 +42,11 @@ fun Application.configureGistRoutes(
             else
                 null
 
-            if (token != null && user == null)
+            if (token != null && user == null) {
                 log.warn("Can't find user by token ($token)")
+                call.respond(HttpStatusCode.Unauthorized, "Token expired")
+                return@post
+            }
 
             val (name, description, visibility, roots) = call.receive<GistCreationRequest>()
 
