@@ -9,8 +9,8 @@ For feature ideas you can [open an issue](https://github.com/skadi-cloud/gist/is
 For documentation you can add it to the readme file in the repository and create a pull request with you addition. 
 
 # Contributing Code
-Feel free to contribute code. You should be able to clone the repository and compile the code with gradle and/or IntelliJ out of the box. The [readme](/readme.md) is a good starting point to understand the content of the repository and how contributions are structured best to make integrating them easy. 
+Feel free to contribute code. You should be able to clone the repository and compile the code with gradle and/or IntelliJ out of the box. The [readme](/README.md) is a good starting point to understand the content of the repository and how contributions are structured best to make integrating them easy. 
 
-Feel free to choose issues that have the [`good first issue`](https://github.com/skadi-cloud/gist/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) label if you are looking for something to contribute. For questions you can use the [Github discussion](https://github.com/skadi-cloud/gist/discussions)feature or open an issue with the label `question` . The discussion feature is generally preferred over issues for questions.
+Feel free to choose issues that have the [`good first issue`](https://github.com/skadi-cloud/gist/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) label if you are looking for something to contribute. For questions you can use the [Github discussion](https://github.com/skadi-cloud/gist/discussions) feature or open an issue with the label `question` . The discussion feature is generally preferred over issues for questions.
 
 For contributing you code please open a [pull request](https://github.com/skadi-cloud/gist/pulls) in the project. If you plan to do feature development or bug fixes that require larger changes to the codebase feel it is a good idea to open a draft pull request early on so we can discuss your design together. 
