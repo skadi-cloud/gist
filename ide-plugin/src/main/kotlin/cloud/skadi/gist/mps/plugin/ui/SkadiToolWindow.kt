@@ -7,7 +7,6 @@ import cloud.skadi.gist.shared.GistVisibility
 import com.intellij.icons.AllIcons
 import com.intellij.ide.BrowserUtil
 import com.intellij.ide.CopyPasteManagerEx
-import com.intellij.ide.CopyPasteUtil
 import com.intellij.ide.actions.ShowSettingsUtilImpl
 import com.intellij.ide.plugins.newui.HorizontalLayout
 import com.intellij.notification.Notification
@@ -29,10 +28,12 @@ import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.components.JBTextArea
 import com.intellij.ui.components.labels.LinkLabel
 import com.intellij.ui.scale.JBUIScale
+import com.intellij.util.ui.EDT
 import com.intellij.util.ui.JBUI
 import com.intellij.util.ui.StatusText
 import com.intellij.util.ui.UIUtil
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.*
+import kotlinx.coroutines.swing.Swing
 import net.miginfocom.layout.CC
 import net.miginfocom.layout.LC
 import net.miginfocom.swing.MigLayout
@@ -286,8 +287,7 @@ class SkadiToolWindowController(private val window: ToolWindow) {
         override fun actionPerformed(e: ActionEvent?) {
             object : Task.Backgroundable(project, "Create gist") {
                 override fun run(indicator: ProgressIndicator) {
-                    runBlocking {
-
+                    GlobalScope.launch {
                         val url = upload(
                             titleDocument.getText(0, titleDocument.length),
                             descriptionDocument.getText(0, descriptionDocument.length),
@@ -316,10 +316,12 @@ class SkadiToolWindowController(private val window: ToolWindow) {
                                 }
                             }).notify(project)
 
-                            titleDocument.remove(0, titleDocument.length)
-                            descriptionDocument.remove(0, descriptionDocument.length)
-                            removeMainContent()
-                            window.hide()
+                            withContext(Dispatchers.Swing) {
+                                titleDocument.remove(0, titleDocument.length)
+                                descriptionDocument.remove(0, descriptionDocument.length)
+                                removeMainContent()
+                                window.hide()
+                            }
                         } else {
                             notificationGroup.createNotification(
                                 "Error creating gist",
