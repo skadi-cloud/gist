@@ -120,6 +120,9 @@ fun Application.configureGistRoutes(
             call.withUserReadableGist { gist, user ->
                 newSuspendedTransaction {
                     call.respondHtmlTemplate(RootTemplate("Skadi Gist", user = user)) {
+                        menu {
+                            userMenu(call, user)
+                        }
                         aboveContainer {
                             userDetailsAndName(gist) { call.url(it) }
                             noScript {

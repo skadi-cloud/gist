@@ -1,6 +1,7 @@
 package cloud.skadi.gist.plugins
 
 import cloud.skadi.gist.data.User
+import cloud.skadi.gist.data.createNewCSRFToken
 import cloud.skadi.gist.data.userByEmail
 import cloud.skadi.gist.getEnvOrDefault
 import cloud.skadi.gist.sha256
@@ -8,6 +9,7 @@ import io.ktor.application.*
 import io.ktor.auth.*
 import io.ktor.client.*
 import io.ktor.client.engine.apache.*
+import io.ktor.features.*
 import io.ktor.html.*
 import io.ktor.http.*
 import io.ktor.locations.*
@@ -78,7 +80,7 @@ suspend fun ApplicationCall.redirectToLoginAndBack() {
     }.build().fullPath)
 }
 
-fun Application.configureOAuth() {
+fun Application.configureOAuth(isProduction: Boolean) {
 
     val loginProviders = mapOf("github" to { call: ApplicationCall ->
         OAuthServerSettings.OAuth2ServerSettings(
@@ -104,6 +106,8 @@ fun Application.configureOAuth() {
             val salt = COOKIE_SALT.sha256()
             transform(SessionTransportTransformerMessageAuthentication(salt))
             cookie.extensions["SameSite"] = "lax"
+            cookie.secure = isProduction
+            cookie.maxAgeInSeconds = 0
         }
     }
 
@@ -155,6 +159,7 @@ fun Application.configureOAuth() {
                         newSuspendedTransaction {
                             user.lastLogin = LocalDateTime.now()
                         }
+                        user.createNewCSRFToken()
                     }
 
                     call.sessions.set(session)

@@ -1,8 +1,16 @@
 package cloud.skadi.gist.views
 
 import cloud.skadi.gist.data.User
+import cloud.skadi.gist.data.createNewCSRFToken
+import cloud.skadi.gist.data.getCSRFToken
+import io.ktor.application.*
 import io.ktor.html.*
+import io.ktor.request.*
+import io.ktor.util.*
 import kotlinx.html.*
+import java.time.LocalDateTime
+import java.time.ZoneOffset
+import java.time.format.DateTimeFormatter
 
 enum class CSSClasses(val className: String) {
     GistDescription("gist-description"),
@@ -23,6 +31,69 @@ enum class ToolTipSide {
 fun FlowContent.withToolTip(side: ToolTipSide, block: DIV.() -> Unit) {
     div(side.toClass()) {
         block()
+    }
+}
+
+private const val CSRFTokenInput = "CSRFToken"
+fun FORM.withCSRFToken(user: User) {
+    val csrfToken = user.getCSRFToken() ?: user.createNewCSRFToken()
+    hiddenInput {
+        name = CSRFTokenInput
+        value = csrfToken
+    }
+}
+
+suspend fun ApplicationCall.validateCSRFToken(user: User): Boolean {
+    val parameters = this.receiveParameters()
+    val tokenString = parameters[CSRFTokenInput]
+    val usersToken = user.getCSRFToken()
+    return tokenString == usersToken
+}
+
+fun FlowContent.withRelativeDate(date: LocalDateTime, contentFormatPattern: String? = null) {
+    attributes["data-relative-date-date-value"] = "${date.toEpochSecond(ZoneOffset.UTC) * 1000}"
+    if(contentFormatPattern != null) {
+        attributes["data-relative-date-format-value"] = contentFormatPattern
+    }
+    attributes["data-controller"] = "relative-date"
+    attributes["data-relative-date-target"] = "item"
+}
+
+fun FlowContent.userMenu(call: ApplicationCall, user: User?) {
+    if (user == null) {
+        a {
+            href = call.url { path("login", "github") }
+            +"Login"
+        }
+    } else {
+        ul("user-actions") {
+            li {
+                a {
+                    href = call.url {
+                        path("user", "settings")
+                    }
+                    attributes["data-turbo"] = "false"
+                    +"Settings"
+                }
+            }
+            li {
+                a {
+                    href = call.url {
+                        path("logout")
+                    }
+                    +"Log out"
+                }
+            }
+        }
+
+        div("user-self") {
+            a {
+                href = call.url { path("user", user.login) }
+                img("user-avatar") {
+                    src = user.avatarUrl ?: DEFAULT_USER_IMAGE
+                }
+            }
+        }
     }
 }
 
@@ -86,14 +157,22 @@ class RootTemplate(private val pageName: String, private val user: User? = null)
                 id = "header"
                 div {
                     id = "branding"
-                    img {
-                        id = "header-image"
-                        src = "/assets/icon-inverted.png"
+                    a {
+                        href = "/"
+                        img {
+                            id = "header-image"
+                            src = "/assets/icon-inverted.png"
+                        }
                     }
+
                     div {
                         h1 { +"Skadi Cloud" }
                         h1(classes = "sub") { +"Gist" }
                     }
+                    a {
+
+                    }
+
                 }
                 div {
                     id = "menu"

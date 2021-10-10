@@ -10,3 +10,10 @@ fun getEnvOrDefault(env: String, default: String): String {
         default
     }
 }
+
+fun <T> getEnvOrDefault(env: String, default: String, block: (String) -> T): T {
+    val value = System.getenv(env) ?: return block(default)
+    return block(value.ifEmpty {
+        default
+    })
+}

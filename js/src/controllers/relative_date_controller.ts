@@ -29,7 +29,7 @@ export default class extends Controller {
                 } else {
                     diffStr = Math.floor(diff / 1000) + " seconds"
                 }
-                if(template != null) {
+                if(template != null && template.length > 0) {
                     element.innerText = FormatString(template, diffStr + " ago")
                 } else {
                     element.innerText = diffStr + " ago"

@@ -62,7 +62,8 @@ fun initDb(jdbc: String, database: String, user: String, password: String): Bool
                     GistRootTable,
                     TokenTable,
                     LikeTable,
-                    CommentTable
+                    CommentTable,
+                    CSRFTable
                 )
             }
         } catch (e: Throwable) {
@@ -86,6 +87,8 @@ fun main() {
         else -> throw RuntimeException("Unknown storage kind: $STORAGE_KIND")
     }
 
+    val isProduction = getEnvOrDefault("IS_PRODUCTION", "FALSE") { it == "TRUE" }
+
     val tsm = TurboStreamMananger()
     embeddedServer(Netty, environment = applicationEngineEnvironment {
         connector {
@@ -97,11 +100,11 @@ fun main() {
             port = INTERNAL_API_PORT
         }
 
-        developmentMode = true
+        developmentMode = !isProduction
         module {
             configureRouting()
             configureMetrics()
-            configureOAuth()
+            configureOAuth(isProduction)
             configureHTTP()
             configureSockets()
             configureGistRoutes(tsm, storage)

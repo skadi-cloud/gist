@@ -8,6 +8,7 @@ import cloud.skadi.gist.turbo.TurboStreamMananger
 import cloud.skadi.gist.url
 import cloud.skadi.gist.views.RootTemplate
 import cloud.skadi.gist.views.gistSummary
+import cloud.skadi.gist.views.userMenu
 import io.ktor.application.*
 import io.ktor.html.*
 import io.ktor.response.*
@@ -30,18 +31,7 @@ fun Application.configureHomeRouting(tsm: TurboStreamMananger, store: StoragePro
                             }
                         }
                         menu {
-                            if (user == null) {
-                                a {
-                                    href = call.url { path("login", "github") }
-                                    +"login"
-                                }
-                            } else {
-                                a {
-                                    href = call.url {
-                                        path("user", "settings")
-                                    }
-                                }
-                            }
+                            userMenu(call, user)
                         }
                     }
                 }

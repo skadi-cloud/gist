@@ -6,15 +6,17 @@ import cloud.skadi.gist.data.getUserByLogin
 import cloud.skadi.gist.optionallyAthenticated
 import cloud.skadi.gist.storage.StorageProvider
 import cloud.skadi.gist.url
-import cloud.skadi.gist.views.RootTemplate
-import cloud.skadi.gist.views.gistSummary
+import cloud.skadi.gist.views.*
 import io.ktor.application.*
 import io.ktor.html.*
 import io.ktor.http.*
+import io.ktor.request.*
 import io.ktor.response.*
 import io.ktor.routing.*
+import io.ktor.util.*
 import kotlinx.html.*
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
+import java.time.format.DateTimeFormatter
 
 fun Application.configureUserRouting(store: StorageProvider) = routing {
     get("/user") {
@@ -24,6 +26,9 @@ fun Application.configureUserRouting(store: StorageProvider) = routing {
         call.authenticated { user ->
             newSuspendedTransaction {
                 call.respondHtmlTemplate(RootTemplate("Settings", user)) {
+                    menu {
+                        userMenu(call, user)
+                    }
                     content {
                         h2 {
                             +"User Settings"
@@ -33,7 +38,7 @@ fun Application.configureUserRouting(store: StorageProvider) = routing {
                             p { +"Name: ${user.name}" }
                             p { +"Email: ${user.email}" }
                         }
-                        div{
+                        div {
                             table {
                                 thead {
                                     tr {
@@ -50,19 +55,41 @@ fun Application.configureUserRouting(store: StorageProvider) = routing {
                                     }
                                 }
                                 tbody {
-                                    user.tokens.notForUpdate().forEach {
+                                    user.tokens.notForUpdate().filter { !it.isTemporary }.forEach {
                                         tr {
                                             td {
                                                 +it.name
                                             }
                                             td {
-                                                +it.created.toString()
+                                                withRelativeDate(it.created)
+                                                val formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy")
+                                                +formatter.format(it.created)
                                             }
                                             td {
-                                                +it.lastUsed.toString()
+                                                val lastUsed = it.lastUsed
+                                                if(lastUsed != null) {
+                                                    withRelativeDate(lastUsed)
+                                                    val formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy")
+                                                    +formatter.format(lastUsed)
+                                                } else {
+                                                    +"Never"
+                                                }
                                             }
                                             td {
-
+                                                form {
+                                                    action = url { path("user", "settings", "token", "delete") }
+                                                    method = FormMethod.post
+                                                    hiddenInput {
+                                                        name = "id"
+                                                        value = it.id.value.toString()
+                                                    }
+                                                    withCSRFToken(user)
+                                                    input {
+                                                        type = InputType.submit
+                                                        name = "Delete"
+                                                        value = "Delete"
+                                                    }
+                                                }
                                             }
                                         }
                                     }
@@ -78,20 +105,23 @@ fun Application.configureUserRouting(store: StorageProvider) = routing {
     get("/user/{login}") {
         call.optionallyAthenticated { user ->
             val login = call.parameters["login"]
-            if(login == null) {
+            if (login == null) {
                 call.respond(HttpStatusCode.NotFound)
                 return@optionallyAthenticated
             }
 
             val profile = getUserByLogin(login)
 
-            if(profile == null) {
+            if (profile == null) {
                 call.respond(HttpStatusCode.NotFound)
                 return@optionallyAthenticated
             }
 
             newSuspendedTransaction {
                 call.respondHtmlTemplate(RootTemplate(login, user)) {
+                    menu {
+                        userMenu(call, user)
+                    }
                     content {
                         allPublicGists(profile).notForUpdate().forEach { gist ->
                             gistSummary(gist, { store.getPreviewUrl(call, it) }, { call.url(it) }, user)

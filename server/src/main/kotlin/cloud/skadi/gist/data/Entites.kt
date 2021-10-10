@@ -1,15 +1,15 @@
 package cloud.skadi.gist.data
 
 import cloud.skadi.gist.data.Gist.Companion.referrersOn
+import cloud.skadi.gist.data.TokenTable.uniqueIndex
 import cloud.skadi.gist.shared.GistVisibility
-import org.jetbrains.exposed.dao.IntEntity
-import org.jetbrains.exposed.dao.IntEntityClass
-import org.jetbrains.exposed.dao.UUIDEntity
-import org.jetbrains.exposed.dao.UUIDEntityClass
+import org.jetbrains.exposed.dao.*
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IntIdTable
+import org.jetbrains.exposed.dao.id.LongIdTable
 import org.jetbrains.exposed.dao.id.UUIDTable
 import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.sql.javatime.date
 import org.jetbrains.exposed.sql.javatime.datetime
 import java.util.*
 
@@ -51,6 +51,19 @@ class Token(id: EntityID<Int>): IntEntity(id) {
     var lastUsed by TokenTable.lastUsed
     var name by TokenTable.name
     var isTemporary by TokenTable.isTemporary
+}
+
+object CSRFTable: LongIdTable() {
+    val user = reference("user", UserTable).uniqueIndex()
+    val created = datetime("created")
+    val token = varchar("token", 256).uniqueIndex()
+}
+
+class CSRFToken(id: EntityID<Long>): LongEntity(id) {
+    companion object: LongEntityClass<CSRFToken>(CSRFTable)
+    var user by User referencedOn CSRFTable.user
+    var token by CSRFTable.token
+    var created by CSRFTable.created
 }
 
 object GistTable: UUIDTable() {
