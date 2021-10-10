@@ -1,14 +1,13 @@
 package cloud.skadi.gist.routing
 
 import cloud.skadi.gist.*
-import cloud.skadi.gist.data.Gist
-import cloud.skadi.gist.data.GistRoot
-import cloud.skadi.gist.data.userByToken
+import cloud.skadi.gist.data.*
 import cloud.skadi.gist.shared.*
 import cloud.skadi.gist.storage.StorageProvider
 import cloud.skadi.gist.turbo.GistUpdate
 import cloud.skadi.gist.turbo.TurboStreamMananger
 import cloud.skadi.gist.views.*
+import cloud.skadi.gist.views.templates.RootTemplate
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import io.ktor.application.*
@@ -25,6 +24,7 @@ import org.jetbrains.exposed.sql.SizedCollection
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
+import java.net.URL
 import java.time.LocalDateTime
 import javax.imageio.ImageIO
 
@@ -119,7 +119,15 @@ fun Application.configureGistRoutes(
         get("/gist/{id}") {
             call.withUserReadableGist { gist, user ->
                 newSuspendedTransaction {
-                    call.respondHtmlTemplate(RootTemplate("Skadi Gist", user = user)) {
+                    val previewUrl = storage.getPreviewUrl(call, gist)
+                    call.respondHtmlTemplate(
+                        RootTemplate(
+                            "Skadi Gist",
+                            user = user,
+                            twitterCard = gist.toTwitterCard(previewUrl),
+                            og = gist.toOg(previewUrl, call.url(gist))
+                        )
+                    ) {
                         menu {
                             userMenu(call, user)
                         }

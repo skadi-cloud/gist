@@ -8,6 +8,9 @@ import cloud.skadi.gist.optionallyAthenticated
 import cloud.skadi.gist.storage.StorageProvider
 import cloud.skadi.gist.url
 import cloud.skadi.gist.views.*
+import cloud.skadi.gist.views.csrf.validateCSRFToken
+import cloud.skadi.gist.views.csrf.withCSRFToken
+import cloud.skadi.gist.views.templates.RootTemplate
 import io.ktor.application.*
 import io.ktor.html.*
 import io.ktor.http.*
