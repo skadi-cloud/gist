@@ -2,11 +2,22 @@
     <id>cloud.skadi.gist</id>
     <name>Skadi Cloud - Gist</name>
     <vendor email="kolja@hey.com" url="https://gist.skadi.cloud">Skadi Cloud</vendor>
-
     <description><![CDATA[
-    Share code snippes of MPS models as you would text.
+    <p>
+    Share and import MPS code snippets on <a href="https://gist.skadi.cloud">skadi gist</a>.
+    </p>
+    <p>
+    Skadi gist allows you to share code snippets with other people on the web. It shares a
+    screenshot of the editor and includes the underlying model so others can directly import it.
+    </p>
+    <p>
+    You can import code snippets other shared directly in to MPS by copying the link and then selecting "Code -> Import Gist".</p>
+    <p>
+    The new skadi toolwindow includes instructions on how to use it. For detailed usage instructions visit the documentation
+    <a href="https://gist.skadi.cloud/how-to">here</a>.
+    </p>
     ]]></description>
-    <change-notes></change-notes>
+    <change-notes>Initial release to marketplace.</change-notes>
 
     <!-- please see https://plugins.jetbrains.com/docs/intellij/plugin-compatibility.html
          on how to target different products -->
