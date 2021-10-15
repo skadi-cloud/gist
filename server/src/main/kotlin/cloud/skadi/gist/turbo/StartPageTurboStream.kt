@@ -11,12 +11,6 @@ import cloud.skadi.gist.views.gistSummary
 import io.ktor.websocket.*
 import org.slf4j.LoggerFactory
 
-sealed class GistUpdate(val gist: Gist) {
-    class Removed(gist: Gist) : GistUpdate(gist)
-    class Added(gist: Gist) : GistUpdate(gist)
-    class Edited(gist: Gist) : GistUpdate(gist)
-}
-
 class StartPageTurboStream(
     private val user: User?,
     private val urlGetter: (Gist) -> String,

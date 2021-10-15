@@ -15,7 +15,7 @@ import kotlin.reflect.KType
 import kotlin.reflect.typeOf
 
 enum class SendResult {
-    Success, Error, Remove
+    Success, Error, Remove, NoOp
 }
 
 interface TurboChannel<T> {
