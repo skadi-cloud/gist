@@ -28,6 +28,8 @@ spec:
           ports:
             - containerPort: 8080
             - containerPort: 9090
+          args:
+            - "-Dlogback.configurationFile=logback-production.xml"
           env:
             - name: SQL_HOST
               value: "postgres:5432"
@@ -76,6 +78,11 @@ spec:
               value: nl-ams
             - name: STORAGE_KIND
               value: s3
+            - name: SENTRY_DSN
+              valueFrom:
+                secretKeyRef:
+                  name: gist-data
+                  key: sentry-dsn
 
           resources:
             requests:
