@@ -128,6 +128,7 @@ div.meta {
 .root {
     border: 1px solid var(--main-color);
     border-radius: 6px;
+    margin-bottom: 32px;
 }
 
 b {
@@ -198,6 +199,7 @@ b {
     background: var(--main-color);
     color: var(--font-light);
     padding: 6px 6px 6px 8px;
+    height: 100%;
 }
 
 @keyframes lds-dual-ring {
