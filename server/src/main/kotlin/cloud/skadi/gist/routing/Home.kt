@@ -5,6 +5,7 @@ import cloud.skadi.gist.optionallyAthenticated
 import cloud.skadi.gist.storage.StorageProvider
 import cloud.skadi.gist.turbo.StartPageTurboStream
 import cloud.skadi.gist.turbo.TurboStreamMananger
+import cloud.skadi.gist.turbo.turboStream
 import cloud.skadi.gist.url
 import cloud.skadi.gist.views.gistSummary
 import cloud.skadi.gist.views.templates.*
@@ -35,6 +36,7 @@ fun Application.configureHomeRouting(tsm: TurboStreamMananger, store: StoragePro
                 newSuspendedTransaction {
                     call.respondHtmlTemplate(RootTemplate("$title: Home", user, homeTc, homeOg)) {
                         content {
+                            turboStream(call.url {  })
                             allPublicGists().notForUpdate().forEach { gist ->
                                 gistSummary(gist, { store.getPreviewUrl(call, it) }, { call.url(it) }, user)
                             }

@@ -9,6 +9,7 @@ import cloud.skadi.gist.storage.StorageProvider
 import cloud.skadi.gist.turbo.GistUpdate
 import cloud.skadi.gist.turbo.SingelGistTurboStream
 import cloud.skadi.gist.turbo.TurboStreamMananger
+import cloud.skadi.gist.turbo.turboStream
 import cloud.skadi.gist.url
 import cloud.skadi.gist.views.*
 import cloud.skadi.gist.views.templates.RootTemplate
@@ -20,6 +21,7 @@ import io.ktor.html.*
 import io.ktor.http.*
 import io.ktor.response.*
 import io.ktor.routing.*
+import io.ktor.util.*
 import io.ktor.websocket.*
 import kotlinx.html.*
 import org.jetbrains.exposed.sql.SizedCollection
@@ -69,6 +71,7 @@ fun Application.installGistViews(storage: StorageProvider, tsm: TurboStreamManan
 
                     }
                     content {
+                        turboStream(call.url { })
                         renderGistContent(gist, storage, call)
                     }
                 }

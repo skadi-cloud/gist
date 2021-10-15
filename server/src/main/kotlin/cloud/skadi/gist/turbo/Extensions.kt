@@ -9,6 +9,13 @@ import kotlinx.html.attributes.Attribute
 import kotlinx.html.attributes.StringAttribute
 import kotlinx.html.stream.createHTML
 
+fun FlowContent.turboStream(url: String) {
+    div {
+        attributes["data-controller"] = "turbo-stream"
+        attributes["data-turbo-stream-url-value"] = url
+    }
+}
+
 class TurboFrame(consumer: TagConsumer<*>) :
     HTMLTag(
         "turbo-frame", consumer, emptyMap(),
@@ -20,7 +27,6 @@ fun HTMLTag.turboFrame(block: TurboFrame.() -> Unit = {}) {
     TurboFrame(consumer).visit(block)
 }
 
-val attributeStringString: Attribute<String> = StringAttribute()
 
 class TurboStream(consumer: TagConsumer<*>) :
     HTMLTag(
@@ -28,6 +34,8 @@ class TurboStream(consumer: TagConsumer<*>) :
         inlineTag = false,
         emptyTag = false
     ), HtmlBlockTag {
+    private val attributeStringString: Attribute<String> = StringAttribute()
+
     var action: String
         get() = attributeStringString[this, "action"]
         set(newValue) {
