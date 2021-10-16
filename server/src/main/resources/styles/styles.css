@@ -1,5 +1,83 @@
-@import "fonts.css";
-@import "tooltip.css";
+@font-face {
+    font-family: 'Montserrat';
+    font-style: italic;
+    font-weight: 400;
+    font-display: block;
+    src: url(../webfonts/Montserrat-Italic.ttf) format('truetype');
+    src: url(../webfonts/Montserrat-Italic.woff2) format('woff2');
+}
+@font-face {
+    font-family: 'Montserrat';
+    font-weight: 400;
+    font-display: block;
+    src: url(../webfonts/Montserrat-Regular.ttf) format('truetype');
+    src: url(../webfonts/Montserrat-Regular.woff2) format('woff2');
+}
+
+@font-face {
+    font-family: 'Montserrat';
+    font-weight: 600;
+    font-display: block;
+    src: url(../webfonts/Montserrat-SemiBold.ttf) format('truetype');
+    src: url(../webfonts/Montserrat-SemiBold.woff2) format('woff2');
+}
+
+@font-face {
+    font-family: 'Montserrat';
+    font-weight: 700;
+    font-display: block;
+    src: url(../webfonts/Montserrat-Bold.ttf) format('truetype');
+    src: url(../webfonts/Montserrat-Bold.woff2) format('woff2');
+}
+
+@font-face {
+    font-family: 'Raleway';
+    font-style: italic;
+    font-weight: 100;
+    font-display: block;
+    src: url(../webfonts/Raleway-ThinItalic.ttf) format('truetype');
+    src: url(../webfonts/Raleway-ThinItalic.woff2) format('woff2');
+}
+@font-face {
+    font-family: 'Raleway';
+    font-weight: 100;
+    font-display: block;
+    src: url(../webfonts/Raleway-Thin.ttf) format('truetype');
+    src: url(../webfonts/Raleway-Thin.woff2) format('woff2');
+}
+
+@font-face {
+    font-family: 'Raleway';
+    font-weight: 400;
+    font-display: block;
+    src: url(../webfonts/Raleway-Regular.ttf) format('truetype');
+    src: url(../webfonts/Raleway-Regular.woff2) format('woff2');
+}
+@font-face {
+    font-family: 'Raleway';
+    font-style: italic;
+    font-weight: 400;
+    font-display: block;
+    src: url(../webfonts/Raleway-Italic.ttf) format('truetype');
+    src: url(../webfonts/Raleway-Italic.woff2) format('woff2');
+}
+
+@font-face {
+    font-family: 'Nanum Gothic Coding';
+    font-weight: 600;
+    font-display: block;
+    src: url(../webfonts/NanumGothicCoding-Bold.ttf) format('truetype');
+    src: url(../webfonts/NanumGothicCoding-Bold.woff2) format('woff2');
+}
+
+@font-face {
+    font-family: 'Nanum Gothic Coding';
+    font-weight: 400;
+    font-display: block;
+    src: url(../webfonts/NanumGothicCoding-Regular.ttf) format('truetype');
+    src: url(../webfonts/NanumGothicCoding-Regular.woff2) format('woff2');
+}
+
 
 body {
     font-family: Raleway, sans-serif;
@@ -18,6 +96,95 @@ body {
 .container {
     width: 95%;
     margin: 0 auto;
+}
+
+.tooltip {
+    display:inline-block;
+    position:relative;
+    border-bottom:1px dotted #666;
+    text-align:left;
+}
+
+.tooltip .left {
+    min-width:350px;
+    top:50%;
+    right:100%;
+    margin-right:20px;
+    transform:translate(0, -50%);
+    padding:10px 20px;
+    color:#FFFFFF;
+    background-color:#00cc99;
+    font-weight:normal;
+    font-size:13px;
+    border-radius:8px;
+    position:absolute;
+    z-index:99999999;
+    box-sizing:border-box;
+    visibility:hidden; opacity:0; transition:opacity 0.8s;
+}
+
+.tooltip .left i {
+    position:absolute;
+    top:50%;
+    left:100%;
+    margin-top:-12px;
+    width:12px;
+    height:24px;
+    overflow:hidden;
+}
+
+.tooltip .left i::after {
+    content:'';
+    position:absolute;
+    width:12px;
+    height:12px;
+    left:0;
+    top:50%;
+    transform:translate(-50%,-50%) rotate(-45deg);
+    background-color:#00cc99;
+}
+
+.tooltip .right {
+    min-width:350px;
+    top:50%;
+    left:100%;
+    margin-left:20px;
+    transform:translate(0, -50%);
+    padding:10px 20px;
+    color:#FFFFFF;
+    background-color:#00cc99;
+    font-weight:normal;
+    font-size:13px;
+    border-radius:8px;
+    position:absolute;
+    z-index:99999999;
+    box-sizing:border-box;
+    visibility:hidden; opacity:0; transition:opacity 0.8s;
+}
+
+.tooltip:hover .right, .tooltip:hover .left {
+    visibility:visible; opacity:1;
+}
+
+.tooltip .right i {
+    position:absolute;
+    top:50%;
+    right:100%;
+    margin-top:-12px;
+    width:12px;
+    height:24px;
+    overflow:hidden;
+}
+
+.tooltip .right i::after {
+    content:'';
+    position:absolute;
+    width:12px;
+    height:12px;
+    left:0;
+    top:50%;
+    transform:translate(50%,-50%) rotate(-45deg);
+    background-color:#00cc99;
 }
 
 h1, h2, h3, h4, h5, h6 {

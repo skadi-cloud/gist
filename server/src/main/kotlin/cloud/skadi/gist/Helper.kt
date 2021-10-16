@@ -113,6 +113,35 @@ suspend fun ApplicationCall.withUserReadableGist(block: suspend (Gist, User?) ->
     block(gist, user)
 }
 
+suspend fun ApplicationCall.withUserOwnedGist(block: suspend (Gist, User) -> Unit) {
+    authenticated { user ->
+        val idParam = this.parameters["id"]
+
+        if (idParam == null) {
+            this.respond(HttpStatusCode.BadRequest)
+            return@authenticated
+        }
+        val gistId = idParam.decodeBase62UUID()
+
+        val gist = newSuspendedTransaction { Gist.findById(gistId) }
+        if (gist == null) {
+            this.application.log.warn("unknown gist: $gistId")
+            this.respond(HttpStatusCode.NotFound)
+            return@authenticated
+        }
+
+        if(gist.visibility != GistVisibility.Private && gist.user?.id != user.id) {
+            this.respond(HttpStatusCode.Forbidden)
+            return@authenticated
+        } else if (gist.user?.equals(user) != true) {
+            this.respond(HttpStatusCode.Forbidden)
+            return@authenticated
+        }
+
+        block(gist, user)
+    }
+}
+
 fun ApplicationCall.acceptsTurbo(): Boolean {
     // accept header contains "text/vnd.turbo-stream.html" when the client support tubro stream updates
     return false

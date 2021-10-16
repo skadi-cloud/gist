@@ -2,8 +2,13 @@ package cloud.skadi.gist.views.templates
 
 import cloud.skadi.gist.data.User
 import io.ktor.html.*
+import io.ktor.http.*
+import io.ktor.http.content.*
+import io.ktor.server.engine.*
+import io.ktor.util.*
+import kotlinx.coroutines.runBlocking
 import kotlinx.html.*
-import java.net.URL
+import java.security.MessageDigest
 
 fun HEAD.favicons() {
     link {
@@ -168,6 +173,54 @@ private fun HEAD.addTwitterCard(card: TwitterCard) {
     }
 }
 
+private val hashCache = mutableMapOf<String, String>()
+
+@InternalAPI
+fun HEAD.styleLinkWithHash(styleResource: String, styleUrl: String) {
+    val classLoader = ApplicationEngineEnvironment::class.java.classLoader
+    val normalizedPath = (
+            styleResource.split('/', '\\')
+            ).normalizePathComponents().joinToString("/")
+
+    val url = if (hashCache.containsKey(styleUrl)) {
+        hashCache[styleUrl]
+    } else {
+        var pathWithHash: String? = null
+        for (url in classLoader.getResources(normalizedPath).asSequence()) {
+            val content = resourceClasspathResource(
+                url,
+                normalizedPath
+            ) { ContentType.defaultForFileExtension(it) } as? OutgoingContent.ReadChannelContent
+            if (content != null) {
+                val bytes = ByteArray(content.contentLength!!.toInt())
+                runBlocking {
+                    content.readFrom().readFully(bytes, 0, content.contentLength!!.toInt())
+                }
+                val digest = MessageDigest.getInstance("MD5")
+                val md5Hash = digest.digest(bytes)
+
+                val dot = styleUrl.lastIndexOf(".")
+
+                pathWithHash = if (dot != -1) {
+                    styleUrl.substring(0 until dot) + "-" + hex(md5Hash) + styleUrl.substring(dot)
+                } else {
+                    styleUrl + "-" + hex(md5Hash)
+                }
+                break
+            }
+        }
+        if (pathWithHash != null) {
+            hashCache[styleUrl] = pathWithHash
+        }
+        pathWithHash
+    }
+
+    if (url == null) {
+        throw Exception("Can't find resouce!")
+    }
+    styleLink(url)
+}
+
 
 class RootTemplate(
     private val pageName: String,
@@ -178,6 +231,7 @@ class RootTemplate(
     val content = Placeholder<HtmlBlockTag>()
     val aboveContainer = Placeholder<HtmlBlockTag>()
     val menu = Placeholder<HtmlBlockTag>()
+    @InternalAPI
     override fun HTML.apply() {
 
         head {
@@ -192,7 +246,7 @@ class RootTemplate(
             if (og != null) {
                 addOpenGraph(og)
             }
-            styleLink("/assets/styles/styles.css")
+            styleLinkWithHash("styles/styles.css","/assets/styles/styles.css")
             styleLink("/assets/font-awesome/css/all.css")
             favicons()
             script {
