@@ -29,7 +29,7 @@ fun Application.installGistEdit(storage: StorageProvider, tsm: TurboStreamManang
         call.withUserOwnedGist { gist, user ->
             newSuspendedTransaction {
                 val call = call
-                call.respondHtmlTemplate(RootTemplate("Edit ${gist.name}", user)) {
+                call.respondHtmlTemplate(RootTemplate("Edit ${gist.name}", call, user)) {
                     aboveContainer {
                         userDetailsAndName(gist) { call.url(it) }
                     }
@@ -132,7 +132,7 @@ fun Application.installGistEdit(storage: StorageProvider, tsm: TurboStreamManang
     get("/gist/{id}/delete") {
         call.withUserOwnedGist { gist, user ->
             newSuspendedTransaction {
-                call.respondHtmlTemplate(RootTemplate("Edit ${gist.name}?", user)) {
+                call.respondHtmlTemplate(RootTemplate("Edit ${gist.name}?", call, user)) {
                     aboveContainer {
                         userDetailsAndName(gist) { call.url(it) }
                     }
@@ -170,6 +170,7 @@ fun Application.installGistEdit(storage: StorageProvider, tsm: TurboStreamManang
             transaction {
                 gist.delete()
             }
+            tsm.sendTurboChannelUpdate(gist.id.value.toString(), GistUpdate.Removed(gist))
             call.respondRedirect("/")
         }
     }

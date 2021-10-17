@@ -10,6 +10,6 @@ export default class extends Controller {
         linkElement.rel = "stylesheet"
         linkElement.href = "https://unpkg.com/easymde@2.15.0/dist/easymde.min.css"
         this.editTarget.parentElement?.appendChild(linkElement)
-        this.mde = new EasyMDE({element: this.editTarget, status: false})
+        this.mde = new EasyMDE({element: this.editTarget, status: false, placeholder: "No description."})
     }
 }

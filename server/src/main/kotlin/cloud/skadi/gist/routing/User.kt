@@ -29,7 +29,7 @@ fun Application.configureUserRouting(store: StorageProvider) = routing {
     get("/user/settings") {
         call.authenticated { user ->
             newSuspendedTransaction {
-                call.respondHtmlTemplate(RootTemplate("Settings", user)) {
+                call.respondHtmlTemplate(RootTemplate("Settings", call, user)) {
                     content {
                         h2 {
                             +"User Settings"
@@ -143,7 +143,7 @@ fun Application.configureUserRouting(store: StorageProvider) = routing {
             }
 
             newSuspendedTransaction {
-                call.respondHtmlTemplate(RootTemplate(login, user)) {
+                call.respondHtmlTemplate(RootTemplate(login, call, user)) {
                     content {
                         allPublicGists(profile).notForUpdate().forEach { gist ->
                             gistSummary(gist, { store.getPreviewUrl(call, it) }, { call.url(it) }, user)

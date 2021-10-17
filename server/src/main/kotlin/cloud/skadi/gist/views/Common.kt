@@ -38,17 +38,17 @@ fun FlowContent.withRelativeDate(date: LocalDateTime, contentFormatPattern: Stri
     attributes["data-relative-date-target"] = "item"
 }
 
-fun FlowContent.userMenu(user: User?) {
+fun FlowContent.userMenu(call: ApplicationCall, user: User?) {
     if (user == null) {
         a {
-            href = url { path("login", "github") }
+            href = call.url { path("login", "github") }
             +"Login"
         }
     } else {
         ul("user-actions") {
             li {
                 a {
-                    href = url {
+                    href = call.url {
                         path("user", "settings")
                     }
                     attributes["data-turbo"] = "false"
@@ -57,7 +57,7 @@ fun FlowContent.userMenu(user: User?) {
             }
             li {
                 a {
-                    href = url {
+                    href = call.url {
                         path("logout")
                     }
                     +"Log out"
@@ -67,7 +67,7 @@ fun FlowContent.userMenu(user: User?) {
 
         div("user-self") {
             a {
-                href = url { path("user", user.login) }
+                href = call.url { path("user", user.login) }
                 img("user-avatar") {
                     src = user.avatarUrl ?: DEFAULT_USER_IMAGE
                 }

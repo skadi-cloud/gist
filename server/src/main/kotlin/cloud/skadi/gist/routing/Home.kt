@@ -34,7 +34,7 @@ fun Application.configureHomeRouting(tsm: TurboStreamMananger, store: StoragePro
 
             call.optionallyAthenticated { user ->
                 newSuspendedTransaction {
-                    call.respondHtmlTemplate(RootTemplate("$title: Home", user, homeTc, homeOg)) {
+                    call.respondHtmlTemplate(RootTemplate("$title: Home", call, user, homeTc, homeOg)) {
                         content {
                             turboStream(call.url {  })
                             allPublicGists().notForUpdate().forEach { gist ->

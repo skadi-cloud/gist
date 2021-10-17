@@ -226,6 +226,7 @@ fun HEAD.styleLinkWithHash(styleResource: String, styleUrl: String) {
 
 class RootTemplate(
     private val pageName: String,
+    private val call: ApplicationCall,
     private val user: User? = null,
     val twitterCard: TwitterCard? = null,
     val og: OpenGraphData? = null
@@ -278,7 +279,7 @@ class RootTemplate(
                 }
                 div {
                     id = "menu"
-                    userMenu(user)
+                    userMenu(call, user)
                 }
             }
             div("above") {
