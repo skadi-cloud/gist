@@ -195,7 +195,7 @@ private suspend fun ApplicationCall.loginFailedPage(errors: List<String>) {
     }
 }
 
-private suspend fun ApplicationCall.loginSuccess(target: String) {
+suspend fun ApplicationCall.loginSuccess(target: String) {
     respondHtml {
         head {
             title { +"Login Successful" }

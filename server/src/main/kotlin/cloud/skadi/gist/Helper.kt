@@ -14,6 +14,7 @@ import io.ktor.response.*
 import io.ktor.util.*
 import io.seruco.encoding.base62.Base62
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
+import org.jetbrains.exposed.sql.transactions.transaction
 import java.nio.ByteBuffer
 import java.security.MessageDigest
 import java.util.*
@@ -50,7 +51,7 @@ suspend fun ApplicationCall.authenticated(body: suspend (User) -> Unit) {
         userByToken(token)
     else gistSession?.user()
 
-    if(gistSession != null && user == null){
+    if (gistSession != null && user == null) {
         this.application.log.error("Valid session but user (${gistSession?.email}) not found!")
     }
 
@@ -73,7 +74,7 @@ suspend fun ApplicationCall.optionallyAthenticated(body: suspend (User?) -> Unit
         userByToken(token)
     else gistSession?.user()
 
-    if(gistSession != null && user == null){
+    if (gistSession != null && user == null) {
         this.application.log.error("Valid session but user (${gistSession?.email}) not found!")
     }
     body(user)
@@ -98,14 +99,15 @@ suspend fun ApplicationCall.withUserReadableGist(block: suspend (Gist, User?) ->
     }
     val gistId = idParam.decodeBase62UUID()
 
-    val gist = newSuspendedTransaction { Gist.findById(gistId) }
+    val gist = transaction { Gist.findById(gistId) }
     if (gist == null) {
         this.application.log.warn("unknown gist: $gistId")
         this.respond(HttpStatusCode.NotFound)
         return
     }
 
-    if (gist.visibility == GistVisibility.Private && gist.user != user) {
+    val isAccessible = transaction { gist.visibility == GistVisibility.Private && gist.user != user }
+    if (isAccessible) {
         this.application.log.warn("gist $gistId not visible for user")
         this.respond(HttpStatusCode.NotFound)
         return
@@ -133,7 +135,7 @@ suspend fun ApplicationCall.withUserOwnedGist(block: suspend (Gist, User) -> Uni
         val call = this
 
         val isAccessible = newSuspendedTransaction {
-            if(gist.visibility != GistVisibility.Private && gist.user?.id != user.id) {
+            if (gist.visibility != GistVisibility.Private && gist.user?.id != user.id) {
                 call.respond(HttpStatusCode.Forbidden)
                 return@newSuspendedTransaction false
             } else if (gist.user?.id != user.id) {
@@ -143,7 +145,7 @@ suspend fun ApplicationCall.withUserOwnedGist(block: suspend (Gist, User) -> Uni
             return@newSuspendedTransaction true
         }
 
-        if(!isAccessible)
+        if (!isAccessible)
             return@authenticated
 
 
@@ -161,7 +163,7 @@ fun ApplicationCall.url(gist: Gist) =
         path("gist", gist.id.value.encodeBase62())
     }
 
-fun String.sha256() : ByteArray {
+fun String.sha256(): ByteArray {
     val digest = MessageDigest.getInstance("SHA-256")
     return digest.digest(this.toByteArray())
 }

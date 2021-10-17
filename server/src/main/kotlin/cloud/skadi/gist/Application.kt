@@ -8,9 +8,13 @@ import cloud.skadi.gist.routing.configureIdeRoutes
 import cloud.skadi.gist.routing.configureUserRouting
 import cloud.skadi.gist.storage.DirectoryBasedStorage
 import cloud.skadi.gist.storage.S3BasedStorage
+import cloud.skadi.gist.storage.StorageProvider
 import cloud.skadi.gist.turbo.TurboStreamMananger
+import io.ktor.application.*
+import io.ktor.routing.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
+import io.ktor.sessions.*
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.SchemaUtils.withDataBaseLock
@@ -23,6 +27,7 @@ import software.amazon.awssdk.services.s3.S3Client
 import software.amazon.awssdk.services.s3.presigner.S3Presigner
 import java.io.File
 import java.net.URI
+import java.time.LocalDateTime
 
 
 private val logger = LoggerFactory.getLogger("dbInfrastructure")
@@ -77,8 +82,7 @@ fun initDb(jdbc: String, database: String, user: String, password: String): Bool
 
 @ExperimentalStdlibApi
 fun main() {
-    initDb("jdbc:postgresql://$SQL_HOST/", SQL_DB, SQL_USER, SQL_PASSWORD)
-    val storage = when(STORAGE_KIND) {
+    val storage = when (STORAGE_KIND) {
         "s3" -> {
             val (client, signer) = initS3()
             S3BasedStorage(client, signer, S3_BUCKET_NAME)
@@ -102,46 +106,80 @@ fun main() {
 
         developmentMode = !isProduction
         module {
-            configureRouting()
-            configureMetrics()
-            configureOAuth(isProduction)
-            configureHTTP()
-            configureSockets()
-            configureGistRoutes(tsm, storage)
-            configureIdeRoutes()
-            configureHomeRouting(tsm, storage)
-            configureUserRouting(storage)
-            if(STORAGE_KIND == "directory") {
-                (storage as DirectoryBasedStorage).install(this)
-            }
+            mainModule(isProduction, tsm, storage)
         }
     }).start(wait = true)
+}
+
+@ExperimentalStdlibApi
+fun Application.mainModule(isProduction: Boolean, tsm: TurboStreamMananger, storage: StorageProvider) {
+    initDb("jdbc:postgresql://$SQL_HOST/", SQL_DB, SQL_USER, SQL_PASSWORD)
+    if (!isProduction) {
+        log.warn("none production environemnt, configuring test loging.")
+        log.warn("THIS IS INSECURE! Set IS_PRODUCTION environment variable to prevent this.")
+        configureTestLogin()
+    }
+    configureRouting()
+    configureMetrics()
+    configureOAuth(isProduction)
+    configureHTTP()
+    configureSockets()
+    configureGistRoutes(tsm, storage)
+    configureIdeRoutes()
+    configureHomeRouting(tsm, storage)
+    configureUserRouting(storage)
+    if (storage is DirectoryBasedStorage) {
+        storage.install(this)
+    }
+}
+
+fun Application.configureTestLogin() {
+    routing {
+        post("/testlogin") {
+            val session = GistSession(
+                login = "testuser",
+                email = "test@test.de",
+                ghToken = "accessToken"
+            )
+            transaction {
+                User.new {
+                    login = "testuser"
+                    email = "test@test.de"
+                    regDate = LocalDateTime.now()
+                    lastLogin = LocalDateTime.now()
+                    name = "testuser"
+                }
+            }
+            call.sessions.set(session)
+            call.loginSuccess("/")
+        }
+    }
 }
 
 
 fun initS3(): Pair<S3Client, S3Presigner> {
 
-    if(S3_ENDPOINT.isBlank()) {
+    if (S3_ENDPOINT.isBlank()) {
         logger.error("Missing S3_ENDPOINT.")
         throw RuntimeException("Missing S3_ENDPOINT.")
     }
 
-    if(S3_ACCESS_KEY.isBlank()) {
+    if (S3_ACCESS_KEY.isBlank()) {
         logger.error("Missing S3_ACCESS_KEY.")
         throw RuntimeException("Missing S3_ACCESS_KEY.")
     }
 
-    if(S3_SECRET_KEY.isBlank()) {
+    if (S3_SECRET_KEY.isBlank()) {
         logger.error("Missing S3_SECRET_KEY.")
         throw RuntimeException("Missing S3_SECRET_KEY.")
     }
 
-    if(S3_REGION.isBlank()) {
+    if (S3_REGION.isBlank()) {
         logger.error("Missing S3_REGION.")
         throw RuntimeException("Missing S3_REGION.")
     }
 
-    if(S3_BUCKET_NAME.isBlank()) {
+    if (S3_BUCKET_NAME.isBlank()) {
         logger.error("Missing S3_BUCKET_NAME.")
         throw RuntimeException("Missing S3_BUCKET_NAME.")
     }
