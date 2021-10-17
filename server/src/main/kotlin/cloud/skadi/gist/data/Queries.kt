@@ -49,7 +49,7 @@ suspend fun getTemporaryToken(token: String) = newSuspendedTransaction {
     dbToken
 }
 
-suspend fun GistSession.user(): User? = newSuspendedTransaction {
+fun GistSession.user(): User? = transaction {
     User.find { UserTable.email eq this@user.email }.firstOrNull()
 }
 

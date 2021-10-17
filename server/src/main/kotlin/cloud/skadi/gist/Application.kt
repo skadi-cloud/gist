@@ -11,6 +11,7 @@ import cloud.skadi.gist.storage.S3BasedStorage
 import cloud.skadi.gist.storage.StorageProvider
 import cloud.skadi.gist.turbo.TurboStreamMananger
 import io.ktor.application.*
+import io.ktor.request.*
 import io.ktor.routing.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
@@ -37,7 +38,6 @@ const val INTERNAL_API_PORT = 9090
 
 val SQL_PASSWORD = getEnvOfFail("SQL_PASSWORD")
 val SQL_USER = getEnvOfFail("SQL_USER")
-val SQL_DB = getEnvOfFail("SQL_DB")
 val SQL_HOST = getEnvOfFail("SQL_HOST")
 
 val S3_ACCESS_KEY = getEnvOrDefault("S3_ACCESS_KEY", "")
@@ -92,7 +92,7 @@ fun main() {
     }
 
     val isProduction = getEnvOrDefault("IS_PRODUCTION", "FALSE") { it == "TRUE" }
-
+    val SQL_DB = getEnvOfFail("SQL_DB")
     val tsm = TurboStreamMananger()
     embeddedServer(Netty, environment = applicationEngineEnvironment {
         connector {
@@ -106,14 +106,14 @@ fun main() {
 
         developmentMode = !isProduction
         module {
-            mainModule(isProduction, tsm, storage)
+            mainModule(isProduction, tsm, storage, SQL_DB)
         }
     }).start(wait = true)
 }
 
 @ExperimentalStdlibApi
-fun Application.mainModule(isProduction: Boolean, tsm: TurboStreamMananger, storage: StorageProvider) {
-    initDb("jdbc:postgresql://$SQL_HOST/", SQL_DB, SQL_USER, SQL_PASSWORD)
+fun Application.mainModule(isProduction: Boolean, tsm: TurboStreamMananger, storage: StorageProvider, sqlDb: String) {
+    initDb("jdbc:postgresql://$SQL_HOST/", sqlDb, SQL_USER, SQL_PASSWORD)
     if (!isProduction) {
         log.warn("none production environemnt, configuring test loging.")
         log.warn("THIS IS INSECURE! Set IS_PRODUCTION environment variable to prevent this.")
@@ -136,15 +136,18 @@ fun Application.mainModule(isProduction: Boolean, tsm: TurboStreamMananger, stor
 fun Application.configureTestLogin() {
     routing {
         post("/testlogin") {
+            val parameters = call.receiveParameters()
+            val user = parameters["user"]!!
+            val email = parameters["email"]!!
             val session = GistSession(
-                login = "testuser",
-                email = "test@test.de",
+                login = user,
+                email = email,
                 ghToken = "accessToken"
             )
             transaction {
                 User.new {
-                    login = "testuser"
-                    email = "test@test.de"
+                    login = user
+                    this.email = email
                     regDate = LocalDateTime.now()
                     lastLogin = LocalDateTime.now()
                     name = "testuser"
