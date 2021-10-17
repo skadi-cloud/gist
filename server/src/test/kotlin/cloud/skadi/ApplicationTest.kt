@@ -93,37 +93,9 @@ class ApplicationTest {
         withTestDb { dbName ->
             withTestApplication({ testModuleSetup(dbName) }) {
                 cookiesSession {
-                    handleRequest(HttpMethod.Post, "/gist/create") {
-                        val createRequest = GistCreationRequest(
-                            "test gist", "Some awesome stuff", GistVisibility.UnListed,
-                            listOf(
-                                GistNode(
-                                    "testRoot",
-                                    TEST_IMAGE_DATA,
-                                    AST(
-                                        emptyList(),
-                                        emptyList(),
-                                        Node(
-                                            UUID.randomUUID().toString(),
-                                            "test-concept",
-                                            emptyList(),
-                                            emptyList(),
-                                            emptyList()
-                                        )
-                                    ),
-                                    true
-                                )
-                            )
-                        )
-                        setBody(jacksonObjectMapper().writeValueAsString(createRequest))
-                        addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    }.apply {
-                        assertEquals(HttpStatusCode.Found, response.status())
-                        val locationHeader = response.headers[HttpHeaders.Location]
-                        assertNotNull(locationHeader)
-                        handleRequest(HttpMethod.Get, Url(locationHeader).encodedPath).apply {
-                            assertEquals(HttpStatusCode.OK, response.status())
-                        }
+                    val gistUrl = testGist(GistVisibility.UnListed)
+                    handleRequest(HttpMethod.Get, gistUrl.encodedPath).apply {
+                        assertEquals(HttpStatusCode.OK, response.status())
                     }
                 }
             }
@@ -172,33 +144,7 @@ class ApplicationTest {
             withTestApplication({ testModuleSetup(dbName) }) {
                 cookiesSession {
                     login()
-                    handleRequest(HttpMethod.Post, "/gist/create") {
-                        val createRequest = GistCreationRequest(
-                            "test gist", "Some awesome stuff", GistVisibility.Private,
-                            listOf(
-                                GistNode(
-                                    "testRoot",
-                                    TEST_IMAGE_DATA,
-                                    AST(
-                                        emptyList(),
-                                        emptyList(),
-                                        Node(
-                                            UUID.randomUUID().toString(),
-                                            "test-concept",
-                                            emptyList(),
-                                            emptyList(),
-                                            emptyList()
-                                        )
-                                    ),
-                                    true
-                                )
-                            )
-                        )
-                        setBody(jacksonObjectMapper().writeValueAsString(createRequest))
-                        addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    }.apply {
-                        assertEquals(HttpStatusCode.Found, response.status())
-                    }
+                    val gistUrl = testGist()
                 }
             }
         }
@@ -210,36 +156,7 @@ class ApplicationTest {
             withTestApplication({ testModuleSetup(dbName) }) {
                 cookiesSession {
                     login()
-                    val gistUrl = handleRequest(HttpMethod.Post, "/gist/create") {
-                        val createRequest = GistCreationRequest(
-                            "test gist", "Some awesome stuff", GistVisibility.Private,
-                            listOf(
-                                GistNode(
-                                    "testRoot",
-                                    TEST_IMAGE_DATA,
-                                    AST(
-                                        emptyList(),
-                                        emptyList(),
-                                        Node(
-                                            UUID.randomUUID().toString(),
-                                            "test-concept",
-                                            emptyList(),
-                                            emptyList(),
-                                            emptyList()
-                                        )
-                                    ),
-                                    true
-                                )
-                            )
-                        )
-                        setBody(jacksonObjectMapper().writeValueAsString(createRequest))
-                        addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    }.run {
-                        assertEquals(HttpStatusCode.Found, response.status())
-                        val locationHeader = response.headers[HttpHeaders.Location]
-                        assertNotNull(locationHeader)
-                        Url(locationHeader)
-                    }
+                    val gistUrl = testGist()
                     handleRequest(HttpMethod.Get,"/logout").apply {
                         assertEquals(HttpStatusCode.Found, response.status())
                     }
@@ -256,36 +173,7 @@ class ApplicationTest {
             withTestApplication({ testModuleSetup(dbName) }) {
                 cookiesSession {
                     login()
-                    val gistUrl = handleRequest(HttpMethod.Post, "/gist/create") {
-                        val createRequest = GistCreationRequest(
-                            "test gist", "Some awesome stuff", GistVisibility.Private,
-                            listOf(
-                                GistNode(
-                                    "testRoot",
-                                    TEST_IMAGE_DATA,
-                                    AST(
-                                        emptyList(),
-                                        emptyList(),
-                                        Node(
-                                            UUID.randomUUID().toString(),
-                                            "test-concept",
-                                            emptyList(),
-                                            emptyList(),
-                                            emptyList()
-                                        )
-                                    ),
-                                    true
-                                )
-                            )
-                        )
-                        setBody(jacksonObjectMapper().writeValueAsString(createRequest))
-                        addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    }.run {
-                        assertEquals(HttpStatusCode.Found, response.status())
-                        val locationHeader = response.headers[HttpHeaders.Location]
-                        assertNotNull(locationHeader)
-                        Url(locationHeader)
-                    }
+                    val gistUrl = testGist()
                     handleRequest(HttpMethod.Get,"/logout").apply {
                         assertEquals(HttpStatusCode.Found, response.status())
                     }
@@ -322,36 +210,7 @@ class ApplicationTest {
             withTestApplication({ testModuleSetup(dbName) }) {
                 cookiesSession {
                     login()
-                    val gistUrl = handleRequest(HttpMethod.Post, "/gist/create") {
-                        val createRequest = GistCreationRequest(
-                            "test gist", "Some awesome stuff", GistVisibility.Private,
-                            listOf(
-                                GistNode(
-                                    "testRoot",
-                                    TEST_IMAGE_DATA,
-                                    AST(
-                                        emptyList(),
-                                        emptyList(),
-                                        Node(
-                                            UUID.randomUUID().toString(),
-                                            "test-concept",
-                                            emptyList(),
-                                            emptyList(),
-                                            emptyList()
-                                        )
-                                    ),
-                                    true
-                                )
-                            )
-                        )
-                        setBody(jacksonObjectMapper().writeValueAsString(createRequest))
-                        addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    }.run {
-                        assertEquals(HttpStatusCode.Found, response.status())
-                        val locationHeader = response.headers[HttpHeaders.Location]
-                        assertNotNull(locationHeader)
-                        Url(locationHeader)
-                    }
+                    val gistUrl = testGist()
                     handleRequest(HttpMethod.Get,"/logout").apply {
                         assertEquals(HttpStatusCode.Found, response.status())
                     }

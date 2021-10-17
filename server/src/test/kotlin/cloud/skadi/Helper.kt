@@ -4,8 +4,10 @@ import cloud.skadi.gist.encodeBase62
 import cloud.skadi.gist.getEnvOfFail
 import cloud.skadi.gist.getEnvOrDefault
 import cloud.skadi.gist.mainModule
+import cloud.skadi.gist.shared.*
 import cloud.skadi.gist.storage.DirectoryBasedStorage
 import cloud.skadi.gist.turbo.TurboStreamMananger
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.ktor.application.*
 import io.ktor.http.*
 import io.ktor.server.testing.*
@@ -13,6 +15,7 @@ import java.nio.file.Files
 import java.sql.DriverManager
 import java.util.*
 import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 
 fun newTestDb(): String {
     val SQL_PASSWORD = getEnvOfFail("SQL_PASSWORD")
@@ -64,3 +67,35 @@ fun TestApplicationEngine.login(user: String = "testuser", email: String = "test
         assertEquals(HttpStatusCode.OK, response.status())
     }
 }
+
+fun TestApplicationEngine.testGist(visibility: GistVisibility = GistVisibility.Private) =
+    handleRequest(HttpMethod.Post, "/gist/create") {
+        val createRequest = GistCreationRequest(
+            "test gist", "Some awesome stuff", visibility,
+            listOf(
+                GistNode(
+                    "testRoot",
+                    TEST_IMAGE_DATA,
+                    AST(
+                        emptyList(),
+                        emptyList(),
+                        Node(
+                            UUID.randomUUID().toString(),
+                            "test-concept",
+                            emptyList(),
+                            emptyList(),
+                            emptyList()
+                        )
+                    ),
+                    true
+                )
+            )
+        )
+        setBody(jacksonObjectMapper().writeValueAsString(createRequest))
+        addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+    }.run {
+        assertEquals(HttpStatusCode.Found, response.status())
+        val locationHeader = response.headers[HttpHeaders.Location]
+        assertNotNull(locationHeader)
+        Url(locationHeader)
+    }
