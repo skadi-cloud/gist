@@ -68,6 +68,10 @@ fun TestApplicationEngine.login(user: String = "testuser", email: String = "test
     }
 }
 
+fun TestApplicationEngine.logout() = handleRequest(HttpMethod.Get, "/logout").apply {
+    assertEquals(HttpStatusCode.Found, response.status())
+}
+
 fun TestApplicationEngine.testGist(visibility: GistVisibility = GistVisibility.Private) =
     handleRequest(HttpMethod.Post, "/gist/create") {
         val createRequest = GistCreationRequest(

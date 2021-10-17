@@ -2,6 +2,7 @@ package cloud.skadi
 
 import cloud.skadi.gist.shared.*
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import io.ktor.client.engine.*
 import io.ktor.http.*
 import io.ktor.server.testing.*
 import org.jsoup.Jsoup
@@ -138,6 +139,7 @@ class ApplicationTest {
             }
         }
     }
+
     @Test
     fun `can create private gist after login`() {
         withTestDb { dbName ->
@@ -157,7 +159,7 @@ class ApplicationTest {
                 cookiesSession {
                     login()
                     val gistUrl = testGist()
-                    handleRequest(HttpMethod.Get,"/logout").apply {
+                    handleRequest(HttpMethod.Get, "/logout").apply {
                         assertEquals(HttpStatusCode.Found, response.status())
                     }
                     handleRequest(HttpMethod.Get, gistUrl.encodedPath).apply {
@@ -167,6 +169,7 @@ class ApplicationTest {
             }
         }
     }
+
     @Test
     fun `cannot access private gist as a different user`() {
         withTestDb { dbName ->
@@ -174,17 +177,19 @@ class ApplicationTest {
                 cookiesSession {
                     login()
                     val gistUrl = testGist()
-                    handleRequest(HttpMethod.Get,"/logout").apply {
+                    handleRequest(HttpMethod.Get, "/logout").apply {
                         assertEquals(HttpStatusCode.Found, response.status())
                     }
                     login("testuser2", "test2@skadi.cloud")
                     handleRequest(HttpMethod.Get, gistUrl.encodedPath).apply {
+                        response.content
                         assertEquals(HttpStatusCode.NotFound, response.status())
                     }
                 }
             }
         }
     }
+
     @Test
     fun `gist with empty root is rejected`() {
         withTestDb { dbName ->
@@ -205,18 +210,124 @@ class ApplicationTest {
     }
 
     @Test
-    fun `cannot edit gist gist without login`() {
+    fun `cannot edit gist without login`() {
         withTestDb { dbName ->
             withTestApplication({ testModuleSetup(dbName) }) {
                 cookiesSession {
                     login()
                     val gistUrl = testGist()
-                    handleRequest(HttpMethod.Get,"/logout").apply {
-                        assertEquals(HttpStatusCode.Found, response.status())
-                    }
+                    logout()
                     handleRequest(HttpMethod.Get, gistUrl.encodedPath + "/edit").apply {
                         assertEquals(HttpStatusCode.Found, response.status())
                         assert(response.headers[HttpHeaders.Location]!!.startsWith("/login/github"))
+                    }
+                }
+            }
+        }
+    }
+
+    @Test
+    fun `can edit my gist`() {
+        withTestDb { dbName ->
+            withTestApplication({ testModuleSetup(dbName) }) {
+                cookiesSession {
+                    login()
+                    val gistUrl = testGist()
+                    handleRequest(HttpMethod.Get, gistUrl.encodedPath + "/edit").apply {
+                        assertEquals(HttpStatusCode.OK, response.status())
+                    }
+                }
+            }
+        }
+    }
+
+    @Test
+    fun `cannot edit gist without different users gist`() {
+        withTestDb { dbName ->
+            withTestApplication({ testModuleSetup(dbName) }) {
+                cookiesSession {
+                    login()
+                    val gistUrl = testGist()
+                    logout()
+                    login("user2", "test2@skadi.cloud")
+                    handleRequest(HttpMethod.Get, gistUrl.encodedPath + "/edit").apply {
+                        assertEquals(HttpStatusCode.NotFound, response.status())
+                    }
+                }
+            }
+        }
+    }
+
+    @Test
+    fun `can delete my gist`() {
+        withTestDb { dbName ->
+            withTestApplication({ testModuleSetup(dbName) }) {
+                cookiesSession {
+                    login()
+                    val gistUrl = testGist()
+                    val csrfToken = handleRequest(HttpMethod.Get, gistUrl.encodedPath + "/delete").run {
+                        val document = Jsoup.parse(response.content)
+                        val csrf =
+                            document.selectFirst("body > div.container > form > input[type=\"hidden\"]:nth-child(2)")
+                        csrf?.attr("value")!!
+                    }
+                    handleRequest(HttpMethod.Post, gistUrl.encodedPath + "/delete") {
+                        addHeader(HttpHeaders.ContentType, ContentType.Application.FormUrlEncoded.toString())
+                        setBody(listOf("CSRFToken" to csrfToken).formUrlEncode())
+                    }.apply {
+                        assertEquals(HttpStatusCode.Found, response.status())
+                    }
+                }
+            }
+        }
+    }
+
+    @Test
+    fun `cannot delete when not logged in`() {
+        withTestDb { dbName ->
+            withTestApplication({ testModuleSetup(dbName) }) {
+                cookiesSession {
+                    login()
+                    val gistUrl = testGist()
+                    val csrfToken = handleRequest(HttpMethod.Get, gistUrl.encodedPath + "/delete").run {
+                        val document = Jsoup.parse(response.content)
+                        val csrf =
+                            document.selectFirst("body > div.container > form > input[type=\"hidden\"]:nth-child(2)")
+                        csrf?.attr("value")!!
+                    }
+                    logout()
+                    handleRequest(HttpMethod.Post, gistUrl.encodedPath + "/delete") {
+                        addHeader(HttpHeaders.ContentType, ContentType.Application.FormUrlEncoded.toString())
+                        setBody(listOf("CSRFToken" to csrfToken).formUrlEncode())
+                    }.apply {
+                        assertEquals(HttpStatusCode.Found, response.status())
+                        assert(response.headers[HttpHeaders.Location]!!.startsWith("/login"))
+                    }
+                }
+            }
+        }
+    }
+
+    @Test
+    fun `cannot delete as different user`() {
+        withTestDb { dbName ->
+            withTestApplication({ testModuleSetup(dbName) }) {
+                cookiesSession {
+                    login()
+                    val gistUrl = testGist()
+                    val csrfToken = handleRequest(HttpMethod.Get, gistUrl.encodedPath + "/delete").run {
+                        val document = Jsoup.parse(response.content)
+                        val csrf =
+                            document.selectFirst("body > div.container > form > input[type=\"hidden\"]:nth-child(2)")
+                        csrf?.attr("value")!!
+                    }
+                    logout()
+                    login("user2", "test2@skadi.cloud")
+                    handleRequest(HttpMethod.Post, gistUrl.encodedPath + "/delete") {
+                        addHeader(HttpHeaders.ContentType, ContentType.Application.FormUrlEncoded.toString())
+                        setBody(listOf("CSRFToken" to csrfToken).formUrlEncode())
+                    }.apply {
+                        assertEquals(HttpStatusCode.NotFound, response.status())
                     }
                 }
             }
