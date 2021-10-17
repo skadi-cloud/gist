@@ -13,7 +13,7 @@ val intellijVersion: String by project
 val mpsVersion: String by project
 val targetJvm: String by project
 
-version = "$intellijVersion.1"
+version = "$intellijVersion.2"
 
 dependencies {
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.4.0")

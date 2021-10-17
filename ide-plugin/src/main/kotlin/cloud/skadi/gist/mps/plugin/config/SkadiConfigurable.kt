@@ -28,7 +28,6 @@ class SkadiConfigurable : BoundConfigurable("Skadi Gist") {
         settings.unregisterLoginListener(this)
         settings.registerLoginListener(this) {
             listeners.forEach { listener -> listener(it) }
-            this.reset()
         }
     }
 
