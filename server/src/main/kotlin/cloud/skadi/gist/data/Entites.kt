@@ -33,7 +33,7 @@ class User(id: EntityID<Int>) : IntEntity(id) {
 }
 
 object TokenTable: LongIdTable() {
-    val token = varchar("token", 256).uniqueIndex()
+    val token = varchar("token", 1024).uniqueIndex()
     val created = datetime("created")
     val lastUsed = datetime("last-used").nullable()
     val name = varchar("name", 256)

@@ -13,6 +13,8 @@ import io.ktor.request.*
 import io.ktor.response.*
 import io.ktor.util.*
 import io.seruco.encoding.base62.Base62
+import org.bouncycastle.crypto.generators.Argon2BytesGenerator
+import org.bouncycastle.crypto.params.Argon2Parameters
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.nio.ByteBuffer
@@ -166,4 +168,24 @@ fun ApplicationCall.url(gist: Gist) =
 fun String.sha256(): ByteArray {
     val digest = MessageDigest.getInstance("SHA-256")
     return digest.digest(this.toByteArray())
+}
+private val base64Encoder = Base64.getEncoder()
+private val base64Decoder = Base64.getDecoder()
+
+fun ByteArray.base64() = base64Encoder.encodeToString(this)
+fun String.decoderBase64() = base64Decoder.decode(this)
+
+fun encodeWithArgon(salt: ByteArray, toEncode: String): String {
+    val params = Argon2Parameters.Builder(Argon2Parameters.ARGON2_id)
+        .withSalt(salt)
+        .withParallelism(1)
+        .withMemoryAsKB(1 shl 12)
+        .withIterations(3)
+        .build()
+    val hash = ByteArray(32)
+
+    val generator = Argon2BytesGenerator()
+    generator.init(params)
+    generator.generateBytes(toEncode.toCharArray(0), hash)
+    return base64Encoder.encodeToString(salt) +"$"+ base64Encoder.encodeToString(hash)
 }

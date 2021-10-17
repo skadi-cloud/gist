@@ -1,5 +1,7 @@
 package cloud.skadi.gist.data
 
+import cloud.skadi.gist.decodeBase64
+import cloud.skadi.gist.encodeWithArgon
 import cloud.skadi.gist.plugins.GistSession
 import cloud.skadi.gist.shared.GistVisibility
 import io.ktor.util.*
@@ -30,9 +32,17 @@ suspend fun userByEmail(email: String) = newSuspendedTransaction {
     User.find { UserTable.email eq email }.firstOrNull()
 }
 
-suspend fun userByToken(token: String, updateLastUsed: Boolean = true) =
-    newSuspendedTransaction {
-        val dbToken = Token.find { TokenTable.token eq token and (TokenTable.isTemporary eq false) }.firstOrNull()
+ fun userByToken(token: String, updateLastUsed: Boolean = true) =
+    transaction {
+        val tokenToFind = if(token.startsWith("v2_")) {
+            val split = token.substring(3).split('$')
+            val salt = split.first()
+            val token = split.last()
+            encodeWithArgon(salt.decodeBase64(), token)
+        } else {
+            token
+        }
+        val dbToken = Token.find { TokenTable.token eq tokenToFind and (TokenTable.isTemporary eq false) }.firstOrNull()
         if (updateLastUsed)
             dbToken?.lastUsed = LocalDateTime.now()
         dbToken?.user
