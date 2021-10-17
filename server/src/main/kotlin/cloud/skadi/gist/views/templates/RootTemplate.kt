@@ -1,6 +1,8 @@
 package cloud.skadi.gist.views.templates
 
 import cloud.skadi.gist.data.User
+import cloud.skadi.gist.views.userMenu
+import io.ktor.application.*
 import io.ktor.html.*
 import io.ktor.http.*
 import io.ktor.http.content.*
@@ -230,7 +232,6 @@ class RootTemplate(
 ) : Template<HTML> {
     val content = Placeholder<HtmlBlockTag>()
     val aboveContainer = Placeholder<HtmlBlockTag>()
-    val menu = Placeholder<HtmlBlockTag>()
     @InternalAPI
     override fun HTML.apply() {
 
@@ -277,7 +278,7 @@ class RootTemplate(
                 }
                 div {
                     id = "menu"
-                    insert(menu)
+                    userMenu(user)
                 }
             }
             div("above") {

@@ -3,6 +3,7 @@ package cloud.skadi.gist.routing
 import cloud.skadi.gist.*
 import cloud.skadi.gist.data.*
 import cloud.skadi.gist.routing.gist.installGistCreation
+import cloud.skadi.gist.routing.gist.installGistEdit
 import cloud.skadi.gist.routing.gist.installGistViews
 import cloud.skadi.gist.shared.*
 import cloud.skadi.gist.storage.StorageProvider
@@ -37,5 +38,6 @@ fun Application.configureGistRoutes(
 ) {
     installGistCreation(storage, tsm)
     installGistViews(storage, tsm)
+    installGistEdit(storage, tsm)
 }
 

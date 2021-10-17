@@ -90,7 +90,8 @@ body {
     --main-color: #00cc99;
     --disable-color: #bbcccc;
     --font-light: #ffffff;
-    --font-dark: #000000
+    --font-dark: #000000;
+    --caution-color: #ff5555
 }
 
 .container {
@@ -367,6 +368,66 @@ b {
     color: var(--font-light);
     padding: 6px 6px 6px 8px;
     height: 100%;
+}
+
+input.button, button, .button a {
+    font-size: 18px;
+    border: none;
+    border-radius: 4px;
+    background: var(--main-color);
+    color: var(--font-light);
+    padding: 6px 6px 6px 8px;
+    height: 100%;
+    text-decoration: none;
+}
+
+.button.delete {
+    background: var(--caution-color);
+}
+
+
+.edit-gist .roots {
+    margin-top: 32px;
+}
+
+.edit-gist .buttons {
+    float: right;
+}
+
+.edit-gist .row {
+    margin-bottom: 32px;
+    padding-top: 8px;
+}
+
+.edit-gist input[type="checkbox"] {
+    visibility: hidden;
+}
+
+.edit-gist input[type="checkbox"]:checked ~ div img {
+    opacity: 30%;
+}
+
+.edit-gist input[type="checkbox"] ~ div:hover {
+    cursor: pointer;
+}
+
+.edit-gist input[type="checkbox"] ~  div i {
+    color: #d4d4d4;
+    visibility: hidden;
+    position: absolute;
+    top: 100px;
+    left: 50%;
+    font-size: 48px;
+    transform: translate(-50%, -50%);
+}
+
+.edit-gist input[type="checkbox"]:checked ~ div i {
+    color: var(--caution-color);
+    visibility: visible;
+}
+
+.edit-gist input[type="checkbox"] ~ div {
+    position: relative;
 }
 
 @keyframes lds-dual-ring {

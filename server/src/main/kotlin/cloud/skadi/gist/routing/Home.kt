@@ -41,9 +41,6 @@ fun Application.configureHomeRouting(tsm: TurboStreamMananger, store: StoragePro
                                 gistSummary(gist, { store.getPreviewUrl(call, it) }, { call.url(it) }, user)
                             }
                         }
-                        menu {
-                            userMenu(call, user)
-                        }
                     }
                 }
             }

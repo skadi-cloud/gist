@@ -19,6 +19,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import io.ktor.application.*
 import io.ktor.html.*
 import io.ktor.http.*
+import io.ktor.request.*
 import io.ktor.response.*
 import io.ktor.routing.*
 import io.ktor.util.*
@@ -41,9 +42,6 @@ fun Application.installGistViews(storage: StorageProvider, tsm: TurboStreamManan
                         og = gist.toOg(previewUrl, call.url(gist))
                     )
                 ) {
-                    menu {
-                        userMenu(call, user)
-                    }
                     aboveContainer {
                         userDetailsAndName(gist) { call.url(it) }
                         noScript {
@@ -107,6 +105,7 @@ fun Application.installGistViews(storage: StorageProvider, tsm: TurboStreamManan
                     gist.likedBy = SizedCollection(gist.likedBy + user)
                 }
             }
+            log.debug(call.request.acceptItems().joinToString ())
             if (call.acceptsTurbo()) {
                 // nothing to do, client will get the update via TSM.
                 call.respond(HttpStatusCode.OK)

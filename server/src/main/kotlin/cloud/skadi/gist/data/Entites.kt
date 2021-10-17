@@ -1,15 +1,13 @@
 package cloud.skadi.gist.data
 
-import cloud.skadi.gist.data.Gist.Companion.referrersOn
-import cloud.skadi.gist.data.TokenTable.uniqueIndex
 import cloud.skadi.gist.shared.GistVisibility
 import org.jetbrains.exposed.dao.*
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.dao.id.LongIdTable
 import org.jetbrains.exposed.dao.id.UUIDTable
+import org.jetbrains.exposed.sql.ReferenceOption
 import org.jetbrains.exposed.sql.Table
-import org.jetbrains.exposed.sql.javatime.date
 import org.jetbrains.exposed.sql.javatime.datetime
 import java.util.*
 
@@ -39,7 +37,7 @@ object TokenTable: LongIdTable() {
     val created = datetime("created")
     val lastUsed = datetime("last-used").nullable()
     val name = varchar("name", 256)
-    val user = reference("user", UserTable)
+    val user = reference("user", UserTable, onDelete = ReferenceOption.CASCADE)
     val isTemporary = bool("is-temporary").default(true)
 }
 
@@ -54,7 +52,7 @@ class Token(id: EntityID<Long>): LongEntity(id) {
 }
 
 object CSRFTable: LongIdTable() {
-    val user = reference("user", UserTable).uniqueIndex()
+    val user = reference("user", UserTable, onDelete = ReferenceOption.CASCADE).uniqueIndex()
     val created = datetime("created")
     val token = varchar("token", 256).uniqueIndex()
 }
@@ -69,7 +67,7 @@ class CSRFToken(id: EntityID<Long>): LongEntity(id) {
 object GistTable: UUIDTable() {
     val name = varchar("name", 1024)
     val description = text("description").nullable()
-    val user = optReference("user", UserTable)
+    val user = optReference("user", UserTable, onDelete = ReferenceOption.SET_NULL)
     val visibility = enumeration("visibility", GistVisibility::class).default(GistVisibility.Private)
     val created = datetime("created").index()
 }
@@ -88,7 +86,7 @@ class Gist(id: EntityID<UUID>): UUIDEntity(id) {
 
 object GistRootTable: UUIDTable() {
     val name = varchar("name", 1024)
-    val gist = reference("gist", GistTable)
+    val gist = reference("gist", GistTable, onDelete = ReferenceOption.CASCADE)
     val node = text("node")
     val isRoot = bool("isRoot")
 }
@@ -102,20 +100,20 @@ class GistRoot(id: EntityID<UUID>): UUIDEntity(id) {
 }
 
 object CommentTable: IntIdTable() {
-    val user = reference("user", UserTable)
-    val gist = reference("gist", GistTable)
+    val user = optReference("user", UserTable, onDelete = ReferenceOption.SET_NULL)
+    val gist = reference("gist", GistTable, onDelete = ReferenceOption.CASCADE)
     val markdown = text("markdown")
 }
 
 class Comment(id: EntityID<Int>): IntEntity(id) {
     companion object : IntEntityClass<Comment>(CommentTable)
-    var user by User referencedOn CommentTable.user
+    var user by User optionalReferencedOn CommentTable.user
     var root by Gist referencedOn CommentTable.gist
     var markdown by CommentTable.markdown
 }
 
 object LikeTable: Table() {
-    var user = reference("user", UserTable)
-    var gist = reference("gist", GistTable)
+    var user = reference("user", UserTable, onDelete = ReferenceOption.CASCADE)
+    var gist = reference("gist", GistTable, onDelete = ReferenceOption.CASCADE)
     override val primaryKey = PrimaryKey(user, gist)
 }

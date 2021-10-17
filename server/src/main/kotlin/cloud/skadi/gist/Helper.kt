@@ -130,13 +130,22 @@ suspend fun ApplicationCall.withUserOwnedGist(block: suspend (Gist, User) -> Uni
             return@authenticated
         }
 
-        if(gist.visibility != GistVisibility.Private && gist.user?.id != user.id) {
-            this.respond(HttpStatusCode.Forbidden)
-            return@authenticated
-        } else if (gist.user?.equals(user) != true) {
-            this.respond(HttpStatusCode.Forbidden)
-            return@authenticated
+        val call = this
+
+        val isAccessible = newSuspendedTransaction {
+            if(gist.visibility != GistVisibility.Private && gist.user?.id != user.id) {
+                call.respond(HttpStatusCode.Forbidden)
+                return@newSuspendedTransaction false
+            } else if (gist.user?.id != user.id) {
+                call.respond(HttpStatusCode.NotFound)
+                return@newSuspendedTransaction false
+            }
+            return@newSuspendedTransaction true
         }
+
+        if(!isAccessible)
+            return@authenticated
+
 
         block(gist, user)
     }
