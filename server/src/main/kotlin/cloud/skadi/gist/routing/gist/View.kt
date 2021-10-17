@@ -73,7 +73,7 @@ fun Application.installGistViews(storage: StorageProvider, tsm: TurboStreamManan
                                 }
                             }
                             if (user != null && gist.user?.id?.value == user.id.value) {
-                                button() {
+                                button(classes = "button") {
                                     a {
                                         href = call.url {
                                             path("gist", gist.id.value.encodeBase62(), "edit")
