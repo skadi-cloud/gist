@@ -57,13 +57,7 @@ fun Application.configureIdeRoutes() {
             }
             post("redeem-token") {
                 val parameters = call.receiveParameters()
-                val deviceName = parameters[PARAMETER_DEVICE_NAME]
                 val temporaryToken = parameters[PARAMETER_TEMPORARY_TOKEN]
-
-                if(deviceName == null) {
-                    call.respond(HttpStatusCode.BadRequest)
-                    return@post
-                }
 
                 if(temporaryToken == null) {
                     call.respond(HttpStatusCode.NotFound)
@@ -72,14 +66,14 @@ fun Application.configureIdeRoutes() {
 
                 val dbToken = getTemporaryToken(temporaryToken)
 
-                if(dbToken == null || dbToken.name != deviceName) {
-                    call.respond(HttpStatusCode.BadRequest)
+                if(dbToken == null) {
+                    call.respond(HttpStatusCode.NotFound)
                     return@post
                 }
 
                 newSuspendedTransaction {
                     val token = Token.new {
-                        name = deviceName
+                        name = dbToken.name
                         this.user = dbToken.user
                         created = LocalDateTime.now()
                         token = generateNonce()
