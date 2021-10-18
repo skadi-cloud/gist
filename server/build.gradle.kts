@@ -6,7 +6,7 @@ plugins {
 val ktor_version = "1.6.4"
 val logback_version = "1.2.6"
 val prometeus_version = "1.7.5"
-val exposed_version = "0.35.1"
+val exposed_version = "0.35.2"
 
 val targetJvm: String by project
 
@@ -60,7 +60,7 @@ dependencies {
     implementation("org.jetbrains.exposed:exposed-dao:$exposed_version")
     implementation("org.jetbrains.exposed:exposed-jdbc:$exposed_version")
     implementation("org.jetbrains.exposed:exposed-java-time:$exposed_version")
-    implementation("org.postgresql:postgresql:42.2.24")
+    implementation("org.postgresql:postgresql:42.3.0")
     implementation("org.kohsuke:github-api:1.133")
 
     implementation("org.bouncycastle:bcprov-jdk15on:1.69")
