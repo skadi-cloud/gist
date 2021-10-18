@@ -31,6 +31,8 @@ spec:
           args:
             - "-Dlogback.configurationFile=logback-production.xml"
           env:
+            - name: IS_PRODUCTION
+              value: "TRUE"
             - name: SQL_HOST
               value: "postgres:5432"
             - name: SQL_DB
