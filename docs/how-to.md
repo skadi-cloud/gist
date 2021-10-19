@@ -1,5 +1,7 @@
 # Skadi Gist - How To
 First you need to be aware by creating a gist you are uploading not only a screenshot but also the underlying AST. The underlying AST contains information like language and concept names, all property values of nodes in the AST, model names of reference targets outside the AST and node ids. For public gists these information are afterwards accessible to everyone browsing gists on the website. If you are not comfortable with uploading these information do not create a gist. 
+
+If you don't like reading you can watch a full tutorial video [here](https://youtu.be/NNS1HHm2W3k).
 ## Installing the Plugin 
 The preferred method of installing the [MPS plugin](https://plugins.jetbrains.com/plugin/17752-skadi-cloud--gist) is the JetBrains Plugin Marketplace. You will get updates automatically if you are installing the plugin from it. 
 If you don’t have access to the marketplace you can install it from the [Github release page](https://github.com/skadi-cloud/gist/releases).
