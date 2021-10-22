@@ -1,0 +1,27 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="KTor Template" type="KtorApplicationConfigurationType" factoryName="Ktor">
+    <module name="skadi-cloud-gist.server.main" />
+    <option name="alternativeJrePath" />
+    <option name="alternativeJrePathEnabled" value="false" />
+    <option name="includeProvidedScope" value="true" />
+    <option name="mainClass" value="cloud.skadi.gist.ApplicationKt" />
+    <option name="passParentEnvs" value="true" />
+    <option name="programParameters" value="" />
+    <option name="shortenCommandLine" value="NONE" />
+    <option name="vmParameters" value="" />
+    <option name="workingDirectory" value="" />
+    <envs>
+      <env name="COOKIE_SALT" value="give me cookies" />
+      <env name="GITHUB_ID" value="" />
+      <env name="SQL_USER" value="postgres" />
+      <env name="SQL_DB" value="skadi-gist" />
+      <env name="GITHUB_SECRET" value="" />
+      <env name="SQL_PASSWORD" value="mysecretpassword" />
+      <env name="SQL_HOST" value="localhost:5432" />
+      <env name="STORAGE_KIND" value="directory" />
+    </envs>
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>
