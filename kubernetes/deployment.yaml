@@ -19,11 +19,9 @@ spec:
       labels:
         app: gist
     spec:
-      imagePullSecrets:
-        - name: registry-secret
       containers:
         - name: gist-server
-          image: rg.nl-ams.scw.cloud/cloud-skadi/gist-server:latest
+          image: skadicloud/gist-server:latest
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8080
