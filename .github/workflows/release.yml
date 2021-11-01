@@ -27,12 +27,18 @@ jobs:
         registry: rg.nl-ams.scw.cloud/cloud-skadi
         username: nologin
         password: ${{ secrets.SCALEWAY_TOKEN }}
-
+    - name: Login to Docker Hub
+      uses: docker/login-action@v1.10.0
+      with:
+        username: ${{ secrets.DOCKER_HUB_USERNAME }}
+        password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
     - name: Docker meta
       id: meta
       uses: crazy-max/ghaction-docker-meta@v3.6.0
       with:
-        images: rg.nl-ams.scw.cloud/cloud-skadi/gist-server
+        images: |
+          rg.nl-ams.scw.cloud/cloud-skadi/gist-server
+          ${{ secrets.DOCKER_HUB_USERNAME }}/gist-server
         tags: |
           type=semver,pattern={{version}}
     - name: Build with Gradle
