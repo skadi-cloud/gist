@@ -23,7 +23,7 @@ Share MPS code snippets. More than just screenshots.
 The repository contains a intelliJ project in the root directory which you can open and intelliJ will import the 
 project for you. It will also download all the dependencies, and you get work on the project. 
 
-If you are using a different code editor e.g. VS Code or GitHub Codespaces your want to run `.gradlew assemble` before 
+If you are using a different code editor e.g. VS Code or GitHub Codespaces your want to run `./gradlew assemble` before 
 you open the project. This will download all dependencies and build the project.
 
 ## Running the Tests 
