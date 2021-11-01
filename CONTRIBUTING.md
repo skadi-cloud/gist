@@ -12,7 +12,7 @@ environment that you like to use the project in.
 For feature ideas you can [open an issue](https://github.com/skadi-cloud/gist/issues/new) in the project describing your
 idea or open a [discussion](https://github.com/skadi-cloud/gist/discussions/).
 
-For documentation you can add it to the readme file in the repository and create a pull request with you addition.
+For documentation, you can add it to the readme file in the repository and create a pull request with you addition.
 
 # Contributing Code
 
@@ -24,11 +24,9 @@ Feel free to choose issues that have
 the [`good first issue`](https://github.com/skadi-cloud/gist/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22)
 label if you are looking for something to contribute. For questions you can use
 the [Github discussion](https://github.com/skadi-cloud/gist/discussions) feature or open an issue with the
-label `question` . The discussion feature is generally preferred over issues for questions.
+label `question`. The discussion feature is generally preferred over issues for questions.
 
 For contributing you code please open a [pull request](https://github.com/skadi-cloud/gist/pulls) in the project. If you
 plan to do feature development or bug fixes that require larger changes to the codebase feel it is a good idea to open a
-draft pull request early on, so we can discuss your design together. 
-
-## Setting Up a Development Environment
+draft pull request early on, so we can discuss your design together.
 
