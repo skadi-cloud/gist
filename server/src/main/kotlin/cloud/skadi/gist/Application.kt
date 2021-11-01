@@ -162,9 +162,9 @@ fun Application.configureTestLogin() {
 
 fun initS3(): Pair<S3Client, S3Presigner> {
 
-    if (S3_ENDPOINT.isBlank()) {
-        logger.error("Missing S3_ENDPOINT.")
-        throw RuntimeException("Missing S3_ENDPOINT.")
+    if (S3_REGION.isBlank() && S3_ENDPOINT.isBlank()) {
+        logger.error("Either S_REGION or S3_ENPOINT need to be set.")
+        throw RuntimeException("Either S_REGION or S3_ENPOINT need to be set.")
     }
 
     if (S3_ACCESS_KEY.isBlank()) {
@@ -177,26 +177,35 @@ fun initS3(): Pair<S3Client, S3Presigner> {
         throw RuntimeException("Missing S3_SECRET_KEY.")
     }
 
-    if (S3_REGION.isBlank()) {
-        logger.error("Missing S3_REGION.")
-        throw RuntimeException("Missing S3_REGION.")
-    }
-
     if (S3_BUCKET_NAME.isBlank()) {
         logger.error("Missing S3_BUCKET_NAME.")
         throw RuntimeException("Missing S3_BUCKET_NAME.")
     }
 
-    val presigner = S3Presigner.builder()
-        .region(Region.of(S3_REGION))
-        .endpointOverride(URI(S3_ENDPOINT))
-        .credentialsProvider(StaticCredentialsProvider.create(AwsBasicCredentials.create(S3_ACCESS_KEY, S3_SECRET_KEY)))
-        .build()
+    val credentialsProvider = StaticCredentialsProvider.create(AwsBasicCredentials.create(S3_ACCESS_KEY, S3_SECRET_KEY))
+    val presigner = if (S3_REGION.isNotBlank()) {
+        S3Presigner.builder()
+            .region(Region.of(S3_REGION))
+            .credentialsProvider(credentialsProvider)
+            .build()
+    } else {
+        S3Presigner.builder()
+            .endpointOverride(URI(S3_ENDPOINT))
+            .credentialsProvider(credentialsProvider)
+            .build()
+    }
 
-    val client = S3Client.builder()
-        .region(Region.of(S3_REGION))
-        .endpointOverride(URI(S3_ENDPOINT))
-        .credentialsProvider(StaticCredentialsProvider.create(AwsBasicCredentials.create(S3_ACCESS_KEY, S3_SECRET_KEY)))
-        .build()
+    val client = if (S3_REGION.isNotBlank()) {
+        S3Client.builder()
+            .region(Region.of(S3_REGION))
+            .credentialsProvider(credentialsProvider)
+            .build()
+    } else {
+        S3Client.builder()
+            .endpointOverride(URI(S3_ENDPOINT))
+            .credentialsProvider(credentialsProvider)
+            .build()
+    }
+
     return client to presigner
 }
