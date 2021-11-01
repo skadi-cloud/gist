@@ -74,8 +74,6 @@ spec:
               value: cloud-skadi-gist
             - name: S3_ENDPOINT
               value: https://cloud-skadi-gist.s3.nl-ams.scw.cloud
-            - name: S3_REGION
-              value: nl-ams
             - name: STORAGE_KIND
               value: s3
             - name: SENTRY_DSN
