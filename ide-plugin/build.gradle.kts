@@ -19,7 +19,7 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.4.0")
     implementation("org.jetbrains.kotlin:kotlin-reflect:1.4.0")
 
-    implementation("io.ktor:ktor-client-core:1.6.4")
+    implementation("io.ktor:ktor-client-core:1.6.5")
     implementation("io.ktor:ktor-client-java:1.6.4")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-swing:1.5.2")
     implementation("org.jetbrains.kotlinx:kotlinx-html-jvm:0.7.3")
