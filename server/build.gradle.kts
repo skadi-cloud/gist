@@ -66,7 +66,7 @@ dependencies {
     implementation("org.bouncycastle:bcprov-jdk15on:1.69")
 
 
-    implementation (platform ("software.amazon.awssdk:bom:2.17.81"))
+    implementation (platform ("software.amazon.awssdk:bom:2.17.89"))
     implementation("software.amazon.awssdk:s3")
 
     testImplementation("io.ktor:ktor-server-tests:$ktor_version")
