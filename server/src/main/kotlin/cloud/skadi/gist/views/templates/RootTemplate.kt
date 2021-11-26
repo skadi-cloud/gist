@@ -224,6 +224,7 @@ fun HEAD.styleLinkWithHash(styleResource: String, styleUrl: String) {
 }
 
 
+@OptIn(InternalAPI::class)
 class RootTemplate(
     private val pageName: String,
     private val call: ApplicationCall,
@@ -233,7 +234,6 @@ class RootTemplate(
 ) : Template<HTML> {
     val content = Placeholder<HtmlBlockTag>()
     val aboveContainer = Placeholder<HtmlBlockTag>()
-    @InternalAPI
     override fun HTML.apply() {
 
         head {
