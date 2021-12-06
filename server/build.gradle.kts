@@ -63,7 +63,7 @@ dependencies {
     implementation("org.postgresql:postgresql:42.3.1")
     implementation("org.kohsuke:github-api:1.301")
 
-    implementation("org.bouncycastle:bcprov-jdk15on:1.69")
+    implementation("org.bouncycastle:bcprov-jdk15on:1.70")
 
 
     implementation (platform ("software.amazon.awssdk:bom:2.17.91"))
