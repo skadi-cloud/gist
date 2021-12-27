@@ -4,9 +4,9 @@ plugins {
 }
 
 val ktor_version = "1.6.7"
-val logback_version = "1.2.7"
+val logback_version = "1.2.10"
 val prometeus_version = "1.8.1"
-val exposed_version = "0.36.2"
+val exposed_version = "0.37.1"
 
 val targetJvm: String by project
 
@@ -66,7 +66,7 @@ dependencies {
     implementation("org.bouncycastle:bcprov-jdk15on:1.70")
 
 
-    implementation (platform ("software.amazon.awssdk:bom:2.17.99"))
+    implementation (platform ("software.amazon.awssdk:bom:2.17.102"))
     implementation("software.amazon.awssdk:s3")
 
     testImplementation("io.ktor:ktor-server-tests:$ktor_version")
