@@ -3,7 +3,7 @@ plugins {
     kotlin("jvm")
 }
 
-val ktor_version = "1.6.7"
+val ktor_version = "1.6.8"
 val logback_version = "1.2.10"
 val prometeus_version = "1.8.3"
 val exposed_version = "0.37.3"
@@ -61,7 +61,7 @@ dependencies {
     implementation("org.jetbrains.exposed:exposed-jdbc:$exposed_version")
     implementation("org.jetbrains.exposed:exposed-java-time:$exposed_version")
     implementation("org.postgresql:postgresql:42.3.3")
-    implementation("org.kohsuke:github-api:1.301")
+    implementation("org.kohsuke:github-api:1.303")
 
     implementation("org.bouncycastle:bcprov-jdk15on:1.70")
 
