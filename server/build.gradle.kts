@@ -61,12 +61,12 @@ dependencies {
     implementation("org.jetbrains.exposed:exposed-jdbc:$exposed_version")
     implementation("org.jetbrains.exposed:exposed-java-time:$exposed_version")
     implementation("org.postgresql:postgresql:42.3.3")
-    implementation("org.kohsuke:github-api:1.301")
+    implementation("org.kohsuke:github-api:1.303")
 
     implementation("org.bouncycastle:bcprov-jdk15on:1.70")
 
 
-    implementation (platform ("software.amazon.awssdk:bom:2.17.136"))
+    implementation (platform ("software.amazon.awssdk:bom:2.17.157"))
     implementation("software.amazon.awssdk:s3")
 
     testImplementation("io.ktor:ktor-server-tests:$ktor_version")
