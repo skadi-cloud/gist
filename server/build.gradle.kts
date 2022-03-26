@@ -55,7 +55,7 @@ dependencies {
 
     implementation("io.seruco.encoding:base62:0.1.3")
 
-    implementation("io.sentry:sentry-logback:5.6.1")
+    implementation("io.sentry:sentry-logback:5.7.0")
     implementation("org.jetbrains.exposed:exposed-core:$exposed_version")
     implementation("org.jetbrains.exposed:exposed-dao:$exposed_version")
     implementation("org.jetbrains.exposed:exposed-jdbc:$exposed_version")
@@ -66,7 +66,7 @@ dependencies {
     implementation("org.bouncycastle:bcprov-jdk15on:1.70")
 
 
-    implementation (platform ("software.amazon.awssdk:bom:2.17.136"))
+    implementation (platform ("software.amazon.awssdk:bom:2.17.157"))
     implementation("software.amazon.awssdk:s3")
 
     testImplementation("io.ktor:ktor-server-tests:$ktor_version")
