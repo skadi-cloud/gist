@@ -3,9 +3,9 @@ plugins {
     kotlin("jvm")
 }
 
-val ktor_version = "1.6.7"
+val ktor_version = "1.6.8"
 val logback_version = "1.2.10"
-val prometeus_version = "1.8.3"
+val prometeus_version = "1.8.4"
 val exposed_version = "0.37.3"
 
 val targetJvm: String by project
