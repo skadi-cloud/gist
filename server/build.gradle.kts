@@ -55,7 +55,7 @@ dependencies {
 
     implementation("io.seruco.encoding:base62:0.1.3")
 
-    implementation("io.sentry:sentry-logback:5.7.3")
+    implementation("io.sentry:sentry-logback:6.0.0")
     implementation("org.jetbrains.exposed:exposed-core:$exposed_version")
     implementation("org.jetbrains.exposed:exposed-dao:$exposed_version")
     implementation("org.jetbrains.exposed:exposed-jdbc:$exposed_version")
@@ -71,7 +71,7 @@ dependencies {
 
     testImplementation("io.ktor:ktor-server-tests:$ktor_version")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
-    testImplementation("org.jsoup:jsoup:1.14.3")
+    testImplementation("org.jsoup:jsoup:1.15.1")
 }
 
 val copyJs by tasks.creating(Copy::class.java){
