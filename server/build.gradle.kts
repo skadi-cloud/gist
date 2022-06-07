@@ -5,7 +5,7 @@ plugins {
 
 val ktor_version = "1.6.8"
 val logback_version = "1.2.11"
-val prometeus_version = "1.8.5"
+val prometeus_version = "1.9.0"
 val exposed_version = "0.38.2"
 
 val targetJvm: String by project
@@ -55,7 +55,7 @@ dependencies {
 
     implementation("io.seruco.encoding:base62:0.1.3")
 
-    implementation("io.sentry:sentry-logback:5.7.3")
+    implementation("io.sentry:sentry-logback:6.0.0")
     implementation("org.jetbrains.exposed:exposed-core:$exposed_version")
     implementation("org.jetbrains.exposed:exposed-dao:$exposed_version")
     implementation("org.jetbrains.exposed:exposed-jdbc:$exposed_version")
