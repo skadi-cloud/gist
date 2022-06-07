@@ -1,5 +1,5 @@
 plugins {
-    id("com.github.node-gradle.node") version "3.2.1"
+    id("com.github.node-gradle.node") version "3.3.0"
 }
 
 val runWebpack by tasks.creating(com.github.gradle.node.npm.task.NpxTask::class) {
