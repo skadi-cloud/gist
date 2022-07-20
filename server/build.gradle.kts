@@ -66,12 +66,12 @@ dependencies {
     implementation("org.bouncycastle:bcprov-jdk15on:1.70")
 
 
-    implementation (platform ("software.amazon.awssdk:bom:2.17.233"))
+    implementation (platform ("software.amazon.awssdk:bom:2.17.236"))
     implementation("software.amazon.awssdk:s3")
 
     testImplementation("io.ktor:ktor-server-tests:$ktor_version")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
-    testImplementation("org.jsoup:jsoup:1.15.1")
+    testImplementation("org.jsoup:jsoup:1.15.2")
 }
 
 val copyJs by tasks.creating(Copy::class.java){
