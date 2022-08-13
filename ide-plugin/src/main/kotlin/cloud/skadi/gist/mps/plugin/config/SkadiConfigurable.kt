@@ -4,6 +4,7 @@ import cloud.skadi.gist.mps.plugin.getLoginUrl
 import com.intellij.openapi.options.BoundConfigurable
 import com.intellij.openapi.ui.DialogPanel
 import com.intellij.openapi.ui.ValidationInfo
+import com.intellij.ui.components.BrowserLink
 import com.intellij.ui.layout.*
 import io.ktor.client.engine.java.*
 import io.ktor.client.features.*
@@ -61,9 +62,16 @@ class SkadiConfigurable : BoundConfigurable("Skadi Gist") {
             row("Logged in as") {
                 textField(settings::loggedInUser).applyIfEnabled().visibleIf(ifLoginChanged).enabled(false)
                 label("Not logged in").visibleIf(ifLoginChanged.not())
-                browserLink("Login", getLoginUrl(settings)).visibleIf(ifLoginChanged.not())
+                browserLink("Login", getLoginUrl(settings)).visibleIf(ifLoginChanged.not()).withBinding(
+                    {}, { link, _ ->
+                        val urlField = BrowserLink::class.java.getDeclaredField("url")
+                        urlField.isAccessible = true
+                        urlField.set(link, getLoginUrl(settings))
+                     },
+                    PropertyBinding({}, {}))
                 link("Log out") {
                     settings.logout()
+                    reset()
                 }.visibleIf(ifLoginChanged).withLargeLeftGap()
             }
         }
