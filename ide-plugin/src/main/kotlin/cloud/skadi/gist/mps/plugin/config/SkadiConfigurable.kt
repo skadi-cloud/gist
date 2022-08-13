@@ -46,12 +46,12 @@ class SkadiConfigurable : BoundConfigurable("Skadi Gist") {
                 textField(settings::backendAddress).withValidationOnApply(validateBackend())
             }
             row("Default visibility") {
-                buttonGroup(settings::visiblility) {
-                    row { radioButton("Public", SkadiGistSettings.Visiblility.Public) }
-                    row { radioButton("Internal", SkadiGistSettings.Visiblility.Internal) }
-                    row { radioButton("Private", SkadiGistSettings.Visiblility.Private).enableIf(ifLoginChanged) }
+                buttonGroup(settings::visibility) {
+                    row { radioButton("Public", SkadiGistSettings.Visibility.Public) }
+                    row { radioButton("Internal", SkadiGistSettings.Visibility.Internal) }
+                    row { radioButton("Private", SkadiGistSettings.Visibility.Private).enableIf(ifLoginChanged) }
                 }
-                checkBox("Remeber visiblilty", settings::rememberVisiblility)
+                checkBox("Remember visibility", settings::rememberVisibility)
             }
             row {
 

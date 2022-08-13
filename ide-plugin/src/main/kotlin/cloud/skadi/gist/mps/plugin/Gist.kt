@@ -129,7 +129,7 @@ fun serializeRootNode(node: SNode): AST {
 /***
  * Imports the AST into the model and adds the imported models and used languages.
  * This method needs to be called inside a write action. The root node is attached
- * to the model after is being parsed to avoid exessive notifications while creating
+ * to the model after is being parsed to avoid excessive notifications while creating
  * the nodes.
  */
 fun AST.importInto(model: SModel) {
@@ -158,18 +158,18 @@ fun Node.toSNode(targetModel: SModelReference?): SNode {
     *  Using the node id from the original model could cause a conflict because there is guarantee that
     *  it is unique globally. NodeId doesn't have to good entropy since it's only once initialised with a random value
     *  and the only incremented. Ideally we check if the node id is taken by trying to get a node with its
-    *  id. If there is a node with that id already we woudl generate a new one. We would need stora a mapping
+    *  id. If there is a node with that id already we would generate a new one. We would need to store a mapping
     *  to update the references to that node by replacing the node pointer of the SReference.
     *  Since the scope of this method is a "root" in the model we get from the server we would need to keep that
     *  mapping for all "roots" and then have a second phase that sets the references correctly with updated node ids.
     * */
 
     //method is deprecated but replacement calls into in behaviour to init the node which
-    //is not what we want. Executing the constucutor might already create a sub structure
-    //that we don't need. e.g. for ClassConcept it would already create a visiblity.
-    //After deserialising from JSON we would then add another visiblilty hence violating the
+    //is not what we want. Executing the constructor might already create a sub structure
+    //that we don't need. e.g. for ClassConcept it would already create a visibility.
+    //After deserializing from JSON we would then add another visibility hence violating the
     // model constrains.
-    // FIXME: find a way to instantiate a node without initilizing it that isn't deprecated.
+    // FIXME: find a way to instantiate a node without initializing it that isn't deprecated.
     val sNode = SModelUtil_new.instantiateConceptDeclaration(
         SConceptAdapterById.deserialize(this.concept),
         null,
