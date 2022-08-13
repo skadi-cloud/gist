@@ -55,6 +55,22 @@ you like. The `SQL_*` variables need match your PostgreSQL configuration.
 
 You can then run the test via `./gradlew build`.
 
+## Running the MPS plugin
+
+Open the file `build.gradle.kts` in the `ide-plugin` folder and change the `intellij` block to use a local
+path and disable instrumentation of the code, e.g.:
+```
+intellij {
+    localPath.set("/Applications/mps/mac/MPS 2021.1.4.app/Contents")
+    instrumentCode.set(false)
+}
+```
+
+Then you have to make sure that the system variable `idea.platform.prefix` is set to 'Idea'.
+Workaround: create a file with extension .sh or .bat in the bin folder of the MPS installation with the following content: `-Didea.platform.prefix=Idea`.
+
+You can now open MPS with the plugin installed by calling `./gradlew runIde`.
+
 # Running your own Instance
 
 The preferred way of running skadi gist is via a container. The container image is available
