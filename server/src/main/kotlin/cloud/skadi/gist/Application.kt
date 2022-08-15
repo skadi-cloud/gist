@@ -190,6 +190,7 @@ fun initS3(): Pair<S3Client, S3Presigner> {
             .build()
     } else {
         S3Presigner.builder()
+            .region(Region.of("nl-ams"))
             .endpointOverride(URI(S3_ENDPOINT))
             .credentialsProvider(credentialsProvider)
             .build()
@@ -202,6 +203,7 @@ fun initS3(): Pair<S3Client, S3Presigner> {
             .build()
     } else {
         S3Client.builder()
+            .region(Region.of("nl-ams"))
             .endpointOverride(URI(S3_ENDPOINT))
             .credentialsProvider(credentialsProvider)
             .build()
