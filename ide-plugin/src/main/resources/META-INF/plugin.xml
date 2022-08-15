@@ -17,7 +17,7 @@
     <a href="https://gist.skadi.cloud/how-to">here</a>.
     </p>
     ]]></description>
-    <change-notes>Fixed a deadlock in the UI when logging in.</change-notes>
+    <change-notes>Typo and bug fixes in the UI.</change-notes>
 
     <!-- please see https://plugins.jetbrains.com/docs/intellij/plugin-compatibility.html
          on how to target different products -->

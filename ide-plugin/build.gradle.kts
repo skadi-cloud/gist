@@ -1,3 +1,5 @@
+import org.jetbrains.intellij.tasks.PatchPluginXmlTask
+
 plugins {
     id("org.jetbrains.intellij")
     id("org.jetbrains.kotlin.jvm")
@@ -38,6 +40,7 @@ dependencies {
 // See https://github.com/JetBrains/gradle-intellij-plugin/
 intellij {
     version.set(intellijVersion)
+
 }
 
 
@@ -52,3 +55,6 @@ tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach 
 }
 
 tasks.getByName("buildSearchableOptions").enabled = false
+tasks.withType<PatchPluginXmlTask>().configureEach {
+    untilBuild.set("")
+}
