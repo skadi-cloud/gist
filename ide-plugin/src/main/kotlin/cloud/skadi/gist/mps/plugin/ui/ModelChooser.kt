@@ -2,6 +2,7 @@ package cloud.skadi.gist.mps.plugin.ui
 
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.DialogWrapper
+import com.intellij.openapi.ui.Messages
 import com.intellij.openapi.util.Disposer
 import com.intellij.ui.components.JBScrollPane
 import jetbrains.mps.ide.project.ProjectHelper
@@ -48,9 +49,12 @@ class ModelChooser(project: Project): DialogWrapper(project) {
 
     override fun doOKAction() {
         selectedModel = when (val selection = myTree.selectionPath?.lastPathComponent) {
-            is SNodeTreeNode -> selection.sModelModelTreeNode?.model
-            is SModelTreeNode -> selection.model
+            is SNodeTreeNode -> if (!selection.sModelModelTreeNode?.model?.isReadOnly!!) selection.sModelModelTreeNode?.model else null
+            is SModelTreeNode -> if(!selection.model.isReadOnly) selection.model else null
             else -> null
+        }
+        if (selectedModel == null) {
+            Messages.showWarningDialog("Can't paste into the selected path. It is either not a model/node or readonly.","The selection is not valid")
         }
         super.doOKAction()
     }

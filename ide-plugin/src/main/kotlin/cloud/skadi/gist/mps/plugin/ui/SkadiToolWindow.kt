@@ -69,7 +69,7 @@ class SkadiToolWindowController(private val window: ToolWindow) {
     }
     private var showPlaceholder = true
     private val settings = SkadiGistSettings.getInstance()
-    private var visiblility = settings.visiblility
+    private var visibility = settings.visibility
 
     fun getContent(): JComponent {
         return wrapper
@@ -86,8 +86,8 @@ class SkadiToolWindowController(private val window: ToolWindow) {
 
     private fun placeholderContent() {
         emptyText.appendLine("No node(s) selected.")
-        emptyText.appendLine("To create a gist right on ad node in the editor")
-        emptyText.appendLine("or select multiple nodes in the logical view.")
+        emptyText.appendLine("To create a gist, right click on a node in the editor")
+        emptyText.appendLine("or select multiple nodes in the logical view and click 'Create Gist'.")
         emptyText.appendLine("")
         emptyText.appendLine("Help", SimpleTextAttributes.LINK_ATTRIBUTES, ActionListener {
             val gistSettings = SkadiGistSettings.getInstance()
@@ -96,7 +96,7 @@ class SkadiToolWindowController(private val window: ToolWindow) {
     }
 
     fun createGist(project: Project, nodes: List<SNode>, repo: SRepository) {
-        val createAction = CreateGistAction(project, nodes, repo) { visiblility }
+        val createAction = CreateGistAction(project, nodes, repo) { visibility }
         val nodeNames = repo.modelAccess.calculateReader { nodes.map { it.presentation } } ?: emptyList()
 
         val cancelAction = object : AbstractAction("Cancel") {
@@ -152,31 +152,31 @@ class SkadiToolWindowController(private val window: ToolWindow) {
         }
 
         val publicBtn = JBRadioButton("Public").apply {
-            isSelected = visiblility == SkadiGistSettings.Visiblility.Public
+            isSelected = visibility == SkadiGistSettings.Visibility.Public
             addActionListener {
-                visiblility = SkadiGistSettings.Visiblility.Public
-                if (settings.rememberVisiblility) {
-                    settings.visiblility = SkadiGistSettings.Visiblility.Public
+                visibility = SkadiGistSettings.Visibility.Public
+                if (settings.rememberVisibility) {
+                    settings.visibility = SkadiGistSettings.Visibility.Public
                 }
             }
             toolTipText = "Gist will be listed on the front page."
         }
         val internalBtn = JBRadioButton("Unlisted").apply {
-            isSelected = visiblility == SkadiGistSettings.Visiblility.Internal
+            isSelected = visibility == SkadiGistSettings.Visibility.Internal
             addActionListener {
-                visiblility = SkadiGistSettings.Visiblility.Internal
-                if (settings.rememberVisiblility) {
-                    settings.visiblility = SkadiGistSettings.Visiblility.Internal
+                visibility = SkadiGistSettings.Visibility.Internal
+                if (settings.rememberVisibility) {
+                    settings.visibility = SkadiGistSettings.Visibility.Internal
                 }
             }
             toolTipText = "Gist will be accessible for everyone with the link but it's not listed on the front page."
         }
         val privateBtn = JBRadioButton("Private").apply {
-            isSelected = visiblility == SkadiGistSettings.Visiblility.Private
+            isSelected = visibility == SkadiGistSettings.Visibility.Private
             addActionListener {
-                visiblility = SkadiGistSettings.Visiblility.Private
-                if (settings.rememberVisiblility) {
-                    settings.visiblility = SkadiGistSettings.Visiblility.Private
+                visibility = SkadiGistSettings.Visibility.Private
+                if (settings.rememberVisibility) {
+                    settings.visibility = SkadiGistSettings.Visibility.Private
                 }
             }
             isEnabled = settings.isLoggedIn
@@ -191,7 +191,7 @@ class SkadiToolWindowController(private val window: ToolWindow) {
             add(privateBtn)
         }
 
-        val visibilityLabel = JLabel("Visiblity")
+        val visibilityLabel = JLabel("Visibility")
 
         val visibilityPanel = JPanel(HorizontalLayout(JBUIScale.scale(8))).apply {
             border = JBUI.Borders.empty(8)
@@ -262,7 +262,7 @@ class SkadiToolWindowController(private val window: ToolWindow) {
 
     private fun createLoginWarning(settings: SkadiGistSettings): JComponent {
         val iconLabel = JLabel(AllIcons.Ide.Notification.WarningEvents)
-        val textPane = LinkLabel.create("Without loging in you are not able to delete the gist!") {
+        val textPane = LinkLabel.create("Without logging in you are not able to delete the gist!") {
             ShowSettingsUtilImpl.showSettingsDialog(null, "cloud.skadi.gist.mps.plugin.config.SkadiConfigurable", "")
         }
 
@@ -282,7 +282,7 @@ class SkadiToolWindowController(private val window: ToolWindow) {
         val project: Project,
         val nodes: List<SNode>,
         val repo: SRepository,
-        val getVisibility: () -> SkadiGistSettings.Visiblility,
+        val getVisibility: () -> SkadiGistSettings.Visibility,
     ) : AbstractAction("Create gist") {
         override fun actionPerformed(e: ActionEvent?) {
             object : Task.Backgroundable(project, "Create gist") {
@@ -336,10 +336,10 @@ class SkadiToolWindowController(private val window: ToolWindow) {
     }
 }
 
-private fun SkadiGistSettings.Visiblility.toModel() =
+private fun SkadiGistSettings.Visibility.toModel() =
     when (this) {
-        SkadiGistSettings.Visiblility.Private -> GistVisibility.Private
-        SkadiGistSettings.Visiblility.Public -> GistVisibility.Public
-        SkadiGistSettings.Visiblility.Internal -> GistVisibility.UnListed
+        SkadiGistSettings.Visibility.Private -> GistVisibility.Private
+        SkadiGistSettings.Visibility.Public -> GistVisibility.Public
+        SkadiGistSettings.Visibility.Internal -> GistVisibility.UnListed
     }
 

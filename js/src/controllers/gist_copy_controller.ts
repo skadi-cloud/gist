@@ -17,10 +17,8 @@ export default class extends Controller {
         event.preventDefault()
         let type = "text/plain"
         let blob = new Blob([document.location.toString()], {type})
-        let vndType = "vnd.skadi.link+text"
-        let blobVnd = new Blob([document.location.toString()], {type: vndType})
         // @ts-ignore
-        let data = [new ClipboardItem({[type]: blob}), new ClipboardItem({[vndType]: blobVnd})]
+        let data = [new ClipboardItem({[type]: blob})]
 
         let buttonTarget = this.buttonTarget
         let textTarget = this.textTarget

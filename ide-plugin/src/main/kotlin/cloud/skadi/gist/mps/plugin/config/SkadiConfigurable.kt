@@ -4,6 +4,7 @@ import cloud.skadi.gist.mps.plugin.getLoginUrl
 import com.intellij.openapi.options.BoundConfigurable
 import com.intellij.openapi.ui.DialogPanel
 import com.intellij.openapi.ui.ValidationInfo
+import com.intellij.ui.components.BrowserLink
 import com.intellij.ui.layout.*
 import io.ktor.client.engine.java.*
 import io.ktor.client.features.*
@@ -27,7 +28,9 @@ class SkadiConfigurable : BoundConfigurable("Skadi Gist") {
         super.reset()
         settings.unregisterLoginListener(this)
         settings.registerLoginListener(this) {
-            listeners.forEach { listener -> listener(it) }
+            listeners.forEach { listener -> listener(it)
+            reset()
+            }
         }
     }
 
@@ -46,12 +49,12 @@ class SkadiConfigurable : BoundConfigurable("Skadi Gist") {
                 textField(settings::backendAddress).withValidationOnApply(validateBackend())
             }
             row("Default visibility") {
-                buttonGroup(settings::visiblility) {
-                    row { radioButton("Public", SkadiGistSettings.Visiblility.Public) }
-                    row { radioButton("Internal", SkadiGistSettings.Visiblility.Internal) }
-                    row { radioButton("Private", SkadiGistSettings.Visiblility.Private).enableIf(ifLoginChanged) }
+                buttonGroup(settings::visibility) {
+                    row { radioButton("Public", SkadiGistSettings.Visibility.Public) }
+                    row { radioButton("Internal", SkadiGistSettings.Visibility.Internal) }
+                    row { radioButton("Private", SkadiGistSettings.Visibility.Private).enableIf(ifLoginChanged) }
                 }
-                checkBox("Remeber visiblilty", settings::rememberVisiblility)
+                checkBox("Remember visibility", settings::rememberVisibility)
             }
             row {
 
@@ -59,9 +62,16 @@ class SkadiConfigurable : BoundConfigurable("Skadi Gist") {
             row("Logged in as") {
                 textField(settings::loggedInUser).applyIfEnabled().visibleIf(ifLoginChanged).enabled(false)
                 label("Not logged in").visibleIf(ifLoginChanged.not())
-                browserLink("Login", getLoginUrl(settings)).visibleIf(ifLoginChanged.not())
+                browserLink("Login", getLoginUrl(settings)).visibleIf(ifLoginChanged.not()).withBinding(
+                    {}, { link, _ ->
+                        val urlField = BrowserLink::class.java.getDeclaredField("url")
+                        urlField.isAccessible = true
+                        urlField.set(link, getLoginUrl(settings))
+                     },
+                    PropertyBinding({}, {}))
                 link("Log out") {
                     settings.logout()
+                    reset()
                 }.visibleIf(ifLoginChanged).withLargeLeftGap()
             }
         }

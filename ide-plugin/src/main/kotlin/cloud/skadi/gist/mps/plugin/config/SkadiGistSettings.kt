@@ -1,6 +1,5 @@
 package cloud.skadi.gist.mps.plugin.config
 
-import cloud.skadi.gist.mps.plugin.CreateGistFromNodeAction
 import com.intellij.credentialStore.CredentialAttributes
 import com.intellij.credentialStore.Credentials
 import com.intellij.credentialStore.generateServiceName
@@ -16,7 +15,7 @@ import io.ktor.util.*
 class SkadiGistSettings : PersistentStateComponentWithModificationTracker<SkadiGistSettings.State> {
 
     val logger = Logger.getInstance(SkadiGistSettings::class.java)
-    enum class Visiblility {
+    enum class Visibility {
         Public,
         Internal,
         Private
@@ -26,16 +25,16 @@ class SkadiGistSettings : PersistentStateComponentWithModificationTracker<SkadiG
     private var csfrToken: String? = null
 
     class State : BaseState() {
-        var visiblity by enum(Visiblility.Public)
+        var visibility by enum(Visibility.Public)
         var backendAddress by string(DEFAULT_BACKEND)
-        var rememberVisiblility by property(true)
+        var rememberVisibility by property(true)
         var loggedInUser by string()
     }
 
-    var visiblility
-        get() = state.visiblity
+    var visibility
+        get() = state.visibility
         set(value) {
-            state.visiblity = value
+            state.visibility = value
         }
 
     var backendAddress: String
@@ -49,10 +48,10 @@ class SkadiGistSettings : PersistentStateComponentWithModificationTracker<SkadiG
             }
         }
 
-    var rememberVisiblility
-        get() = state.rememberVisiblility
+    var rememberVisibility
+        get() = state.rememberVisibility
         set(value) {
-            state.rememberVisiblility = value
+            state.rememberVisibility = value
         }
 
     var loggedInUser
