@@ -5,8 +5,8 @@ plugins {
 
 repositories {
     mavenCentral()
-    maven { url = uri("https://projects.itemis.de/nexus/content/repositories/mbeddr") }
     maven { url = uri("https://maven.pkg.jetbrains.space/public/p/kotlinx-html/maven") }
+    maven { url = uri("https://artifacts.itemis.cloud/repository/maven-mps/") }
 }
 
 val intellijVersion: String by project
