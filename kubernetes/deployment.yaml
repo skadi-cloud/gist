@@ -26,8 +26,6 @@ spec:
           ports:
             - containerPort: 8080
             - containerPort: 9090
-          args:
-            - "-Dlogback.configurationFile=logback-production.xml"
           env:
             - name: IS_PRODUCTION
               value: "TRUE"
