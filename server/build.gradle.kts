@@ -60,7 +60,7 @@ dependencies {
     implementation("org.jetbrains.exposed:exposed-dao:$exposed_version")
     implementation("org.jetbrains.exposed:exposed-jdbc:$exposed_version")
     implementation("org.jetbrains.exposed:exposed-java-time:$exposed_version")
-    implementation("org.postgresql:postgresql:42.4.2")
+    implementation("org.postgresql:postgresql:42.5.0")
     implementation("org.kohsuke:github-api:1.308")
 
     implementation("org.bouncycastle:bcprov-jdk15on:1.70")
@@ -71,7 +71,7 @@ dependencies {
 
     testImplementation("io.ktor:ktor-server-tests:$ktor_version")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
-    testImplementation("org.jsoup:jsoup:1.15.2")
+    testImplementation("org.jsoup:jsoup:1.15.3")
 }
 
 val copyJs by tasks.creating(Copy::class.java){
