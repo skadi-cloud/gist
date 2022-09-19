@@ -4,7 +4,7 @@ plugins {
 }
 
 val ktor_version = "1.6.8"
-val logback_version = "1.4.0"
+val logback_version = "1.4.1"
 val prometeus_version = "1.9.4"
 val exposed_version = "0.39.2"
 
