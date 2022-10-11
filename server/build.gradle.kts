@@ -55,13 +55,13 @@ dependencies {
 
     implementation("io.seruco.encoding:base62:0.1.3")
 
-    implementation("io.sentry:sentry-logback:6.4.1")
+    implementation("io.sentry:sentry-logback:6.5.0")
     implementation("org.jetbrains.exposed:exposed-core:$exposed_version")
     implementation("org.jetbrains.exposed:exposed-dao:$exposed_version")
     implementation("org.jetbrains.exposed:exposed-jdbc:$exposed_version")
     implementation("org.jetbrains.exposed:exposed-java-time:$exposed_version")
     implementation("org.postgresql:postgresql:42.5.0")
-    implementation("org.kohsuke:github-api:1.308")
+    implementation("org.kohsuke:github-api:1.313")
 
     implementation("org.bouncycastle:bcprov-jdk15on:1.70")
 
