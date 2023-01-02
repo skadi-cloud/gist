@@ -18,7 +18,7 @@ val targetJvm: String by project
 version = "$intellijVersion.3"
 
 dependencies {
-    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.4.0")
+    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.8.0")
     implementation("org.jetbrains.kotlin:kotlin-reflect:1.4.0")
 
     implementation("io.ktor:ktor-client-core:1.6.8")
