@@ -49,7 +49,7 @@ jobs:
     - name: Build with Gradle
       run: ./gradlew :server:installDist --no-daemon
     - name: build docker images
-      uses: docker/build-push-action@v4.0.0
+      uses: docker/build-push-action@v4.1.0
       with:
         context: server
         push: true
