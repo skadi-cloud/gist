@@ -22,7 +22,7 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-reflect:1.4.0")
 
     implementation("io.ktor:ktor-client-core:1.6.8")
-    implementation("io.ktor:ktor-client-java:1.6.8")
+    implementation("io.ktor:ktor-client-java:2.3.2")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-swing:1.5.2")
     implementation("org.jetbrains.kotlinx:kotlinx-html-jvm:0.8.1")
     implementation("org.jetbrains.kotlinx:kotlinx-html:0.8.1")
