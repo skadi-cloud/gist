@@ -61,7 +61,7 @@ dependencies {
     implementation("org.jetbrains.exposed:exposed-jdbc:$exposed_version")
     implementation("org.jetbrains.exposed:exposed-java-time:$exposed_version")
     implementation("org.postgresql:postgresql:42.5.3")
-    implementation("org.kohsuke:github-api:1.314")
+    implementation("org.kohsuke:github-api:1.317")
 
     implementation("org.bouncycastle:bcprov-jdk15on:1.70")
 
