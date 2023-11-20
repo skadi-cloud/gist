@@ -25,7 +25,7 @@ dependencies {
     implementation("io.ktor:ktor-client-java:1.6.8")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-swing:1.5.2")
     implementation("org.jetbrains.kotlinx:kotlinx-html-jvm:0.10.1")
-    implementation("org.jetbrains.kotlinx:kotlinx-html:0.8.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-html:0.10.1")
 
     implementation(project(":shared"))
 
