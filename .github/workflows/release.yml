@@ -39,7 +39,7 @@ jobs:
         password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
     - name: Docker meta
       id: meta
-      uses: crazy-max/ghaction-docker-meta@v5.4.0
+      uses: crazy-max/ghaction-docker-meta@v5.5.0
       with:
         images: |
           rg.nl-ams.scw.cloud/cloud-skadi/gist-server
