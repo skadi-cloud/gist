@@ -54,7 +54,7 @@ jobs:
         GITHUB_ID: ${{ secrets.OAUTH_ID }}
         COOKIE_SALT: ${{ secrets.COOKIE_SALT }}
     - name: Archive test results
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: ${{ always() }}
       with:
         name: test-results
