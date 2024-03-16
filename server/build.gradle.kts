@@ -6,7 +6,7 @@ plugins {
 val ktor_version = "1.6.8"
 val logback_version = "1.4.6"
 val prometeus_version = "1.10.6"
-val exposed_version = "0.46.0"
+val exposed_version = "0.48.0"
 
 val targetJvm: String by project
 
