@@ -71,7 +71,7 @@ dependencies {
 
     testImplementation("io.ktor:ktor-server-tests:$ktor_version")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
-    testImplementation("org.jsoup:jsoup:1.16.1")
+    testImplementation("org.jsoup:jsoup:1.17.2")
 }
 
 val copyJs by tasks.creating(Copy::class.java){
