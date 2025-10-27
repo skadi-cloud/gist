@@ -286,10 +286,10 @@
   resolved "https://registry.yarnpkg.com/@hotwired/stimulus/-/stimulus-3.2.2.tgz#071aab59c600fed95b97939e605ff261a4251608"
   integrity sha512-eGeIqNOQpXoPAIP7tC1+1Yc1yl1xnwYqg+3mzqxyrbE5pg5YFBZcA6YoTiByJB6DKAEsiWtl6tjTJS4IYtbB7A==
 
-"@hotwired/turbo@^7.3.0":
-  version "7.3.0"
-  resolved "https://registry.yarnpkg.com/@hotwired/turbo/-/turbo-7.3.0.tgz#2226000fff1aabda9fd9587474565c9929dbf15d"
-  integrity sha512-Dcu+NaSvHLT7EjrDrkEmH4qET2ZJZ5IcCWmNXxNQTBwlnE5tBZfN6WxZ842n5cHV52DH/AKNirbPBtcEXDLW4g==
+"@hotwired/turbo@^8.0.18":
+  version "8.0.18"
+  resolved "https://registry.yarnpkg.com/@hotwired/turbo/-/turbo-8.0.18.tgz#10ae3de450b955862f89e30c50d96d676813744e"
+  integrity sha512-dG0N7khQsP8sujclodQE3DYkI4Lq7uKA04fhT0DCC/DwMgn4T4WM3aji6EC6+iCfABQeJncY0SraXqVeOq0vvQ==
 
 "@jridgewell/gen-mapping@^0.1.0":
   version "0.1.1"
