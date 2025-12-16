@@ -20,7 +20,7 @@ class ApplicationTest {
             withTestApplication({ testModuleSetup(dbName) }) {
                 handleRequest(HttpMethod.Get, "/").apply {
                     assertEquals(HttpStatusCode.OK, response.status())
-                    val document = Jsoup.parse(response.content)
+                    val document = Jsoup.parse(response.content!!)
                     val firstLinkInMenu = document.selectFirst("#menu > a")
                     assertNotNull(firstLinkInMenu)
                     assertEquals("Login", firstLinkInMenu.text())
@@ -37,7 +37,7 @@ class ApplicationTest {
                     login()
                     handleRequest(HttpMethod.Get, "/").apply {
                         assertEquals(HttpStatusCode.OK, response.status())
-                        val document = Jsoup.parse(response.content)
+                        val document = Jsoup.parse(response.content!!)
                         val firstLinkInMenu = document.selectFirst("#menu > ul > li:nth-child(1) > a")
                         assertNotNull(firstLinkInMenu)
                         assertEquals("Settings", firstLinkInMenu.text())
@@ -266,7 +266,7 @@ class ApplicationTest {
                     login()
                     val gistUrl = testGist()
                     val csrfToken = handleRequest(HttpMethod.Get, gistUrl.encodedPath + "/delete").run {
-                        val document = Jsoup.parse(response.content)
+                        val document = Jsoup.parse(response.content!!)
                         val csrf =
                             document.selectFirst("body > div.container > form > input[type=\"hidden\"]:nth-child(2)")
                         csrf?.attr("value")!!
@@ -290,7 +290,7 @@ class ApplicationTest {
                     login()
                     val gistUrl = testGist()
                     val csrfToken = handleRequest(HttpMethod.Get, gistUrl.encodedPath + "/delete").run {
-                        val document = Jsoup.parse(response.content)
+                        val document = Jsoup.parse(response.content!!)
                         val csrf =
                             document.selectFirst("body > div.container > form > input[type=\"hidden\"]:nth-child(2)")
                         csrf?.attr("value")!!
@@ -316,7 +316,7 @@ class ApplicationTest {
                     login()
                     val gistUrl = testGist()
                     val csrfToken = handleRequest(HttpMethod.Get, gistUrl.encodedPath + "/delete").run {
-                        val document = Jsoup.parse(response.content)
+                        val document = Jsoup.parse(response.content!!)
                         val csrf =
                             document.selectFirst("body > div.container > form > input[type=\"hidden\"]:nth-child(2)")
                         csrf?.attr("value")!!

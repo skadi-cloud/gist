@@ -26,9 +26,9 @@ java {
 }
 
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
-    kotlinOptions {
-        jvmTarget = targetJvm
-        apiVersion = "1.5"
+    compilerOptions {
+        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.fromTarget(targetJvm))
+        apiVersion.set(org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_1_9)
     }
 }
 
