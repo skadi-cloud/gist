@@ -14,7 +14,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: Set up JDK 11
-      uses: actions/setup-java@v4
+      uses: actions/setup-java@v5
       with:
         distribution: 'adopt'
         java-version: 11
@@ -39,7 +39,7 @@ jobs:
         password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
     - name: Docker meta
       id: meta
-      uses: crazy-max/ghaction-docker-meta@v5.5.1
+      uses: crazy-max/ghaction-docker-meta@v5.8.0
       with:
         images: |
           rg.nl-ams.scw.cloud/cloud-skadi/gist-server
@@ -49,7 +49,7 @@ jobs:
     - name: Build with Gradle
       run: ./gradlew :server:installDist --no-daemon
     - name: build docker images
-      uses: docker/build-push-action@v6.0.0
+      uses: docker/build-push-action@v6.18.0
       with:
         context: server
         push: true
