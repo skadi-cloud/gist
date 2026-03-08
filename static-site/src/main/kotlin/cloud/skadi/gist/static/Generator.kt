@@ -137,7 +137,7 @@ sealed class ImageStore {
          * For s3        : S3_BUCKET_NAME, S3_ENDPOINT (custom endpoint, optional),
          *                 S3_REGION, S3_ACCESS_KEY, S3_SECRET_KEY
          */
-        fun fromEnv(): ImageStore? {
+        fun fromEnv(): ImageStore {
             val kind = System.getenv("STORAGE_KIND")?.takeIf { it.isNotBlank() } ?: "directory"
             return when (kind) {
                 "directory" -> {
@@ -213,7 +213,7 @@ fun main() {
 
 class StaticSiteGenerator(
     private val outputDir: File,
-    private val imageStore: ImageStore?
+    private val imageStore: ImageStore
 ) {
     private val classLoader = StaticSiteGenerator::class.java.classLoader
     private val dateFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy")
@@ -251,7 +251,7 @@ class StaticSiteGenerator(
         gists.forEachIndexed { index, gist ->
             println("Generating page ${index + 1}/${gists.size}: ${gist.id.encodeBase62()}")
             generateGistPage(gist)
-            imageStore?.copyImages(gist, outputDir)
+            imageStore.copyImages(gist, outputDir)
         }
 
         println("Static site generation complete! Output: ${outputDir.absolutePath}")
@@ -328,11 +328,10 @@ class StaticSiteGenerator(
     private fun gistPageUrl(gist: GistSnapshot) = "/gist/${gist.id.encodeBase62()}/"
 
     private fun previewUrl(gist: GistSnapshot): String =
-        imageStore?.previewUrl(gist.id) ?: "/assets/images/${gist.id.encodeBase62()}/preview.png"
+        imageStore.previewUrl(gist.id)
 
     private fun rootImageUrl(gist: GistSnapshot, root: GistRootSnapshot): String =
-        imageStore?.rootImageUrl(gist.id, root.id, root.name)
-            ?: "/assets/images/${gist.id.encodeBase62()}/${root.name}.png"
+        imageStore.rootImageUrl(gist.id, root.id, root.name)
 
     // -----------------------------------------------------------------------
     // HTML building
