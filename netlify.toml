@@ -1,0 +1,28 @@
+# Netlify configuration for the Skadi Cloud Gist archived static site.
+#
+# The static site must be generated BEFORE deploying to Netlify.
+# Run the generator with:
+#
+#   SQL_USER=<user> SQL_PASSWORD=<pass> SQL_HOST=<host:port> SQL_DB=<db> \
+#     [STORAGE_DIR=<path-to-image-storage>] \
+#     ./gradlew :static-site:generateStaticSite
+#
+# The generated output is placed in static-site/build/static-site/ by default.
+# Commit that directory (or deploy its contents) to Netlify.
+
+[build]
+  publish = "static-site/build/static-site"
+  # No automated build command – static files are pre-generated and committed.
+  command = ""
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+
+[[redirects]]
+  from = "/gist/:id"
+  to = "/gist/:id/"
+  status = 301

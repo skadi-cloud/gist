@@ -4,4 +4,5 @@ include ':server'
 include ':ide-plugin'
 include ':shared'
 include 'js'
+include ':static-site'
 
