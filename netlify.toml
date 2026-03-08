@@ -4,7 +4,7 @@
 # Run the generator with:
 #
 #   SQL_USER=<user> SQL_PASSWORD=<pass> SQL_HOST=<host:port> SQL_DB=<db> \
-#     [STORAGE_DIR=<path-to-image-storage>] \
+#     [STORAGE_DIRECTORY=<path-to-image-storage>] \
 #     ./gradlew :static-site:generateStaticSite
 #
 # The generated output is placed in static-site/build/static-site/ by default.
