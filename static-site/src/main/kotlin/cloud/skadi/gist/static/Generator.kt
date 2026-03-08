@@ -165,14 +165,14 @@ sealed class ImageStore {
                             .region(Region.of(region))
                             .credentialsProvider(credentials)
                             .build()
-                            .utilities()
+                            .use { it.utilities() }
                     } else {
                         S3Client.builder()
                             .region(Region.of(CUSTOM_ENDPOINT_PLACEHOLDER_REGION))
                             .endpointOverride(URI(endpoint!!))
                             .credentialsProvider(credentials)
                             .build()
-                            .utilities()
+                            .use { it.utilities() }
                     }
                     S3(s3Utilities, bucketName)
                 }
