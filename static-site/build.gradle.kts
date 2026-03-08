@@ -49,20 +49,34 @@ dependencies {
 
     // PostgreSQL JDBC driver (needed at runtime for Database.connect)
     implementation("org.postgresql:postgresql:42.7.3")
+
+    // AWS SDK – needed at compile time for S3 URL generation
+    implementation(platform("software.amazon.awssdk:bom:2.25.11"))
+    implementation("software.amazon.awssdk:s3")
 }
 
 /**
  * Custom task to generate the static site.
  *
  * Required environment variables:
- *   SQL_USER      - PostgreSQL username
- *   SQL_PASSWORD  - PostgreSQL password
- *   SQL_HOST      - PostgreSQL host:port (default: localhost:5432)
- *   SQL_DB        - PostgreSQL database name (default: gist)
+ *   SQL_USER         - PostgreSQL username
+ *   SQL_PASSWORD     - PostgreSQL password
+ *   SQL_HOST         - PostgreSQL host:port (default: localhost:5432)
+ *   SQL_DB           - PostgreSQL database name (default: gist)
  *
  * Optional environment variables:
- *   OUTPUT_DIR    - Output directory for the static site (default: build/static-site)
- *   STORAGE_DIR   - Path to the local image storage directory (required to include gist images)
+ *   OUTPUT_DIR       - Output directory for the static site (default: build/static-site)
+ *   STORAGE_KIND     - Storage backend: "directory" (default) or "s3"
+ *
+ * For STORAGE_KIND=directory:
+ *   STORAGE_DIRECTORY - Path to the local image storage root
+ *
+ * For STORAGE_KIND=s3:
+ *   S3_BUCKET_NAME   - S3 bucket name
+ *   S3_REGION        - AWS region (e.g. us-east-1); required if S3_ENDPOINT is not set
+ *   S3_ENDPOINT      - Custom S3-compatible endpoint URL; required if S3_REGION is not set
+ *   S3_ACCESS_KEY    - AWS access key ID
+ *   S3_SECRET_KEY    - AWS secret access key
  */
 val generateStaticSite by tasks.registering(JavaExec::class) {
     group = "application"
@@ -73,7 +87,13 @@ val generateStaticSite by tasks.registering(JavaExec::class) {
     environment(
         mapOf(
             "OUTPUT_DIR" to (System.getenv("OUTPUT_DIR") ?: "${layout.buildDirectory.get().asFile}/static-site"),
-            "STORAGE_DIR" to (System.getenv("STORAGE_DIR") ?: ""),
+            "STORAGE_KIND" to (System.getenv("STORAGE_KIND") ?: "directory"),
+            "STORAGE_DIRECTORY" to (System.getenv("STORAGE_DIRECTORY") ?: ""),
+            "S3_BUCKET_NAME" to (System.getenv("S3_BUCKET_NAME") ?: ""),
+            "S3_REGION" to (System.getenv("S3_REGION") ?: ""),
+            "S3_ENDPOINT" to (System.getenv("S3_ENDPOINT") ?: ""),
+            "S3_ACCESS_KEY" to (System.getenv("S3_ACCESS_KEY") ?: ""),
+            "S3_SECRET_KEY" to (System.getenv("S3_SECRET_KEY") ?: ""),
             "SQL_USER" to (System.getenv("SQL_USER") ?: ""),
             "SQL_PASSWORD" to (System.getenv("SQL_PASSWORD") ?: ""),
             "SQL_HOST" to (System.getenv("SQL_HOST") ?: "localhost:5432"),

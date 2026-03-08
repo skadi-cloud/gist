@@ -10,7 +10,13 @@ import kotlinx.html.stream.createHTML
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.transactions.transaction
+import software.amazon.awssdk.auth.credentials.AwsBasicCredentials
+import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider
+import software.amazon.awssdk.regions.Region
+import software.amazon.awssdk.services.s3.S3Client
+import software.amazon.awssdk.services.s3.S3Utilities
 import java.io.File
+import java.net.URI
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.UUID
@@ -37,12 +43,151 @@ data class GistRootSnapshot(
 )
 
 // ---------------------------------------------------------------------------
+// Storage abstraction
+// ---------------------------------------------------------------------------
+
+/**
+ * Abstracts over the two storage backends (local directory and S3) for the
+ * purposes of the static site generator.
+ */
+sealed class ImageStore {
+    /**
+     * URL (absolute path or full https://… URL) to embed for the preview image
+     * of the given gist.
+     */
+    abstract fun previewUrl(gistId: UUID): String
+
+    /**
+     * URL to embed for a specific root image.
+     *
+     * [rootId] is the GistRoot entity UUID (used by S3 key).
+     * [rootName] is the root name string (used by the directory backend).
+     */
+    abstract fun rootImageUrl(gistId: UUID, rootId: UUID, rootName: String): String
+
+    /**
+     * Called once per gist after HTML generation.  Implementations may use
+     * this to copy local files into the output directory; S3 implementations
+     * are a no-op here because images are served directly from S3.
+     */
+    open fun copyImages(gist: GistSnapshot, outputDir: File) {}
+
+    // -----------------------------------------------------------------------
+
+    /**
+     * Local-filesystem storage.  Images are copied from [storageDir] to the
+     * output directory and served as static files under /assets/images/.
+     */
+    class LocalDirectory(private val storageDir: File) : ImageStore() {
+        override fun previewUrl(gistId: UUID) =
+            "/assets/images/${gistId.encodeBase62()}/preview.png"
+
+        override fun rootImageUrl(gistId: UUID, rootId: UUID, rootName: String) =
+            "/assets/images/${gistId.encodeBase62()}/$rootName.png"
+
+        override fun copyImages(gist: GistSnapshot, outputDir: File) {
+            val sourceDir = File(storageDir, gist.id.toString())
+            if (!sourceDir.exists()) {
+                println("  Warning: no images for gist ${gist.id.encodeBase62()} at ${sourceDir.absolutePath}")
+                return
+            }
+            val destDir = File(File(outputDir, "assets/images"), gist.id.encodeBase62())
+            destDir.mkdirs()
+            sourceDir.listFiles()?.forEach { file ->
+                file.copyTo(File(destDir, file.name), overwrite = true)
+            }
+        }
+    }
+
+    /**
+     * S3-compatible storage.  All public gists have public-read ACL, so their
+     * images can be referenced directly via the S3 public URL – no local
+     * copying is required.
+     *
+     * Key layout (matches [cloud.skadi.gist.storage.S3BasedStorage]):
+     *   preview  → {gistId}/preview.png
+     *   root     → {gistId}/{rootId}/original.png
+     */
+    class S3(private val s3Utilities: S3Utilities, private val bucketName: String) : ImageStore() {
+        private fun publicUrl(key: String): String =
+            s3Utilities.getUrl { it.bucket(bucketName).key(key) }.toExternalForm()
+
+        override fun previewUrl(gistId: UUID) = publicUrl("$gistId/preview.png")
+
+        override fun rootImageUrl(gistId: UUID, rootId: UUID, rootName: String) =
+            publicUrl("$gistId/$rootId/original.png")
+
+        // copyImages is intentionally a no-op: S3 images are served directly.
+    }
+
+    companion object {
+        /**
+         * Placeholder AWS region required by the SDK when a fully custom S3-compatible
+         * endpoint is used (e.g. DigitalOcean Spaces, MinIO).  Matches the value used
+         * in the server's Application.kt.
+         */
+        private const val CUSTOM_ENDPOINT_PLACEHOLDER_REGION = "nl-ams"
+
+        /**
+         * Build the appropriate [ImageStore] from environment variables using the
+         * same naming convention as the server's Application.kt.
+         *
+         * STORAGE_KIND  = "directory" (default) | "s3"
+         * For directory : STORAGE_DIRECTORY  – path to the local storage root
+         * For s3        : S3_BUCKET_NAME, S3_ENDPOINT (custom endpoint, optional),
+         *                 S3_REGION, S3_ACCESS_KEY, S3_SECRET_KEY
+         */
+        fun fromEnv(): ImageStore? {
+            val kind = System.getenv("STORAGE_KIND")?.takeIf { it.isNotBlank() } ?: "directory"
+            return when (kind) {
+                "directory" -> {
+                    val dir = System.getenv("STORAGE_DIRECTORY")?.takeIf { it.isNotBlank() }
+                        ?: return null
+                    LocalDirectory(File(dir))
+                }
+                "s3" -> {
+                    val bucketName = System.getenv("S3_BUCKET_NAME")?.takeIf { it.isNotBlank() }
+                        ?: error("S3_BUCKET_NAME is required when STORAGE_KIND=s3")
+                    val accessKey = System.getenv("S3_ACCESS_KEY")?.takeIf { it.isNotBlank() }
+                        ?: error("S3_ACCESS_KEY is required when STORAGE_KIND=s3")
+                    val secretKey = System.getenv("S3_SECRET_KEY")?.takeIf { it.isNotBlank() }
+                        ?: error("S3_SECRET_KEY is required when STORAGE_KIND=s3")
+                    val region = System.getenv("S3_REGION")?.takeIf { it.isNotBlank() }
+                    val endpoint = System.getenv("S3_ENDPOINT")?.takeIf { it.isNotBlank() }
+                    if (region == null && endpoint == null) {
+                        error("Either S3_REGION or S3_ENDPOINT must be set when STORAGE_KIND=s3")
+                    }
+                    val credentials = StaticCredentialsProvider.create(
+                        AwsBasicCredentials.create(accessKey, secretKey)
+                    )
+                    val s3Utilities = if (region != null) {
+                        S3Client.builder()
+                            .region(Region.of(region))
+                            .credentialsProvider(credentials)
+                            .build()
+                            .utilities()
+                    } else {
+                        S3Client.builder()
+                            .region(Region.of(CUSTOM_ENDPOINT_PLACEHOLDER_REGION))
+                            .endpointOverride(URI(endpoint!!))
+                            .credentialsProvider(credentials)
+                            .build()
+                            .utilities()
+                    }
+                    S3(s3Utilities, bucketName)
+                }
+                else -> error("Unknown STORAGE_KIND: $kind (expected 'directory' or 's3')")
+            }
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
 // Entry point
 // ---------------------------------------------------------------------------
 
 fun main() {
     val outputDir = File(System.getenv("OUTPUT_DIR")?.takeIf { it.isNotBlank() } ?: "build/static-site")
-    val storageDir = System.getenv("STORAGE_DIR")?.takeIf { it.isNotBlank() }?.let { File(it) }
 
     val sqlUser = System.getenv("SQL_USER")?.takeIf { it.isNotBlank() }
         ?: error("SQL_USER environment variable is required")
@@ -58,7 +203,8 @@ fun main() {
         password = sqlPassword
     )
 
-    StaticSiteGenerator(outputDir, storageDir).generate()
+    val imageStore = ImageStore.fromEnv()
+    StaticSiteGenerator(outputDir, imageStore).generate()
 }
 
 // ---------------------------------------------------------------------------
@@ -67,7 +213,7 @@ fun main() {
 
 class StaticSiteGenerator(
     private val outputDir: File,
-    private val storageDir: File?
+    private val imageStore: ImageStore?
 ) {
     private val classLoader = StaticSiteGenerator::class.java.classLoader
     private val dateFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy")
@@ -105,7 +251,7 @@ class StaticSiteGenerator(
         gists.forEachIndexed { index, gist ->
             println("Generating page ${index + 1}/${gists.size}: ${gist.id.encodeBase62()}")
             generateGistPage(gist)
-            copyGistImages(gist)
+            imageStore?.copyImages(gist, outputDir)
         }
 
         println("Static site generation complete! Output: ${outputDir.absolutePath}")
@@ -175,30 +321,18 @@ class StaticSiteGenerator(
         }
     }
 
-    /** Copy gist images from the local storage directory to the output directory. */
-    private fun copyGistImages(gist: GistSnapshot) {
-        storageDir ?: return
-        val sourceDir = File(storageDir, gist.id.toString())
-        if (!sourceDir.exists()) {
-            println("  Warning: no images for gist ${gist.id.encodeBase62()} at ${sourceDir.absolutePath}")
-            return
-        }
-        val destDir = File(File(outputDir, "assets/images"), gist.id.encodeBase62())
-        destDir.mkdirs()
-        sourceDir.listFiles()?.forEach { file ->
-            file.copyTo(File(destDir, file.name), overwrite = true)
-        }
-    }
-
     // -----------------------------------------------------------------------
     // URL helpers
     // -----------------------------------------------------------------------
 
     private fun gistPageUrl(gist: GistSnapshot) = "/gist/${gist.id.encodeBase62()}/"
-    private fun previewUrl(gist: GistSnapshot) =
-        "/assets/images/${gist.id.encodeBase62()}/preview.png"
-    private fun rootImageUrl(gistId: UUID, rootName: String) =
-        "/assets/images/${gistId.encodeBase62()}/$rootName.png"
+
+    private fun previewUrl(gist: GistSnapshot): String =
+        imageStore?.previewUrl(gist.id) ?: "/assets/images/${gist.id.encodeBase62()}/preview.png"
+
+    private fun rootImageUrl(gist: GistSnapshot, root: GistRootSnapshot): String =
+        imageStore?.rootImageUrl(gist.id, root.id, root.name)
+            ?: "/assets/images/${gist.id.encodeBase62()}/${root.name}.png"
 
     // -----------------------------------------------------------------------
     // HTML building
@@ -376,7 +510,7 @@ class StaticSiteGenerator(
                         div("root") {
                             div("name") { b { +root.name } }
                             img(classes = "rendered") {
-                                src = rootImageUrl(gist.id, root.name)
+                                src = rootImageUrl(gist, root)
                                 alt = root.name
                             }
                         }
@@ -390,3 +524,4 @@ class StaticSiteGenerator(
         File(gistDir, "index.html").writeText(html)
     }
 }
+
