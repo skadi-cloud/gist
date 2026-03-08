@@ -142,7 +142,7 @@ sealed class ImageStore {
             return when (kind) {
                 "directory" -> {
                     val dir = System.getenv("STORAGE_DIRECTORY")?.takeIf { it.isNotBlank() }
-                        ?: return null
+                        ?: error("STORAGE_DIRECTORY is required when STORAGE_KIND=directory")
                     LocalDirectory(File(dir))
                 }
                 "s3" -> {
