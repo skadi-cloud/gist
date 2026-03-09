@@ -234,6 +234,8 @@ class StaticSiteGenerator(
                         id = gist.id.value,
                         name = gist.name,
                         description = gist.description,
+                        userLogin = null,
+                        userAvatarUrl = null,
                         /*userLogin = gist.user?.login,
                         userAvatarUrl = gist.user?.avatarUrl,*/
                         created = gist.created,
