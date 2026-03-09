@@ -108,8 +108,10 @@ sealed class ImageStore {
      *   preview  → {gistId}/preview.png
      *   root     → {gistId}/{rootId}/original.png
      */
-    class S3(private val s3Utilities: S3Utilities, private val bucketName: String) : ImageStore() {
+    class S3(private val s3Utilities: S3Utilities, private val bucketName: String, private val endpoint: String?) : ImageStore() {
         private fun publicUrl(key: String): String =
+            if(endpoint != null) "$endpoint/$bucketName/$key"
+            else
             s3Utilities.getUrl { it.bucket(bucketName).key(key) }.toExternalForm()
 
         override fun previewUrl(gistId: UUID) = publicUrl("$gistId/preview.png")
@@ -174,7 +176,7 @@ sealed class ImageStore {
                             .build()
                             .use { it.utilities() }
                     }
-                    S3(s3Utilities, bucketName)
+                    S3(s3Utilities, bucketName, endpoint)
                 }
                 else -> error("Unknown STORAGE_KIND: $kind (expected 'directory' or 's3')")
             }
