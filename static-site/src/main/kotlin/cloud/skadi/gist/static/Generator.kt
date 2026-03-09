@@ -234,8 +234,8 @@ class StaticSiteGenerator(
                         id = gist.id.value,
                         name = gist.name,
                         description = gist.description,
-                        userLogin = gist.user?.login,
-                        userAvatarUrl = gist.user?.avatarUrl,
+                        /*userLogin = gist.user?.login,
+                        userAvatarUrl = gist.user?.avatarUrl,*/
                         created = gist.created,
                         roots = gist.roots.toList().map { root ->
                             GistRootSnapshot(id = root.id.value, name = root.name, isRoot = root.isRoot)
